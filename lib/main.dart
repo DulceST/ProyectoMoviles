@@ -20,7 +20,7 @@ class MainApp extends StatelessWidget {
       routes: {
        "/home": (context) => HomeScreen(),
        "/recycling_map": (context) => RecyclingMapScreen(),
-       "add_location": (context)=> AddLocationScreen(),
+       "/add_location": (context)=> AddLocationScreen(),
       },
     );
   }
