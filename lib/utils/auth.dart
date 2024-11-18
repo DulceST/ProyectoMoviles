@@ -5,7 +5,7 @@ class AuthServices{
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   //Creacion de la cuenta 
-  Future createAcount(String email, String password, String user, String phone, String state, String city)async{
+  Future createAcount(String email, String password, String user, String phone, String country, String state, String city)async{
     try {
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
       print(userCredential.user);
@@ -20,6 +20,7 @@ class AuthServices{
         'email': email,
         'password': password,
         'phone': phone,
+        'country': country,
         'state': state,
         'city': city,
         
@@ -48,7 +49,7 @@ class AuthServices{
       final a = userCredential.user;//obtiene el usuario 
       //si el usuario es distinto de nulo retorna el id
       if(a?.uid != null){
-        return a?.uid;
+        return 0; 
       }
     } on FirebaseAuthException catch (e) {
       if(e.code=='user-not-found'){
@@ -57,5 +58,7 @@ class AuthServices{
         return 2; 
       }  
     }
+      return 3; 
   }
+
 }

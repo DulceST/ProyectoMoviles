@@ -1,3 +1,4 @@
+import 'package:csc_picker/csc_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto_moviles/utils/auth.dart';
 
@@ -10,68 +11,79 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreen extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  String? selectedCountry;
+  String? selectedState; 
+  String? selectedCity;
 
   // Controladores para los campos
   final _userController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _cityController = TextEditingController();
-  final _stateController = TextEditingController();
+  
   final AuthServices _authServices = AuthServices();
 
   // Método para manejar el registro
   void _register() async {
-  if (_formKey.currentState?.validate() == true) {
-    String user = _userController.text;
-    String email = _emailController.text;
-    String password = _passwordController.text;
-    String phone = _phoneController.text;
-    String city = _cityController.text;
-    String state = _stateController.text;
+    if (_formKey.currentState?.validate() == true) {
+      String user = _userController.text;
+      String email = _emailController.text;
+      String password = _passwordController.text;
+      String phone = _phoneController.text;
 
-    // Llamar al método de creación de cuenta
-    var result = await _authServices.createAcount(
-      email, password, user,  phone, city, state,
-    );
+      if (selectedCountry == null || selectedState == null || selectedCity == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Por favor, selecciona país, estado y ciudad')),
+        );
+        return;
+      }
 
-    if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al crear la cuenta')),
+      // Llamar al método de creación de cuenta
+      var result = await _authServices.createAcount(
+        email,
+        password,
+        user,
+        phone,
+        selectedCountry!, 
+        selectedState!,
+        selectedCity!,
       );
-    } else if (result == 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Contraseña débil')),
-      );
-    } else if (result == 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El correo ya está en uso')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Usuario registrado exitosamente')),
-      );
-      
-      // Limpiar los campos del formulario
-      _userController.clear();
-      _emailController.clear();
-      _passwordController.clear();
-      _phoneController.clear();
-      _cityController.clear();
-      _stateController.clear();
 
-      // Redirigir al login
-      Navigator.popAndPushNamed(context, '/login');
+      if (result == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al crear la cuenta')),
+        );
+      } else if (result == 1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Contraseña débil')),
+        );
+      } else if (result == 2) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El correo ya está en uso')),
+        );
+      }else{
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuario registrado exitosamente')),
+        );
+
+        // Limpiar los campos del formulario
+        _userController.clear();
+        _emailController.clear();
+        _passwordController.clear();
+        _phoneController.clear();
+        
+        // Redirigir al login
+        Navigator.popAndPushNamed(context, '/login');
+      }
     }
   }
-}
 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        
         backgroundColor: Colors.green,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -146,32 +158,31 @@ class _RegisterScreen extends State<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 15),
-                _buildTextField(
-                  controller: _stateController,
-                  label: 'Estado',
-                  icon: Icons.location_on,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, ingresa tu estado';
-                    }
-                    return null;
+                CSCPicker(
+                  showStates: true,
+                  showCities: true,
+                  onCountryChanged: (value) {
+                    setState(() {
+                      selectedCountry = value;
+                      selectedState = null;
+                      selectedCity = null;
+                    });
                   },
-                ),
-                const SizedBox(height: 15),
-                _buildTextField(
-                  controller: _cityController,
-                  label: 'Ciudad',
-                  icon: Icons.location_city,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, ingresa tu ciudad';
-                    }
-                    return null;
+                  onStateChanged: (value) {
+                    setState(() {
+                      selectedState = value;
+                      selectedCity = null;
+                    });
                   },
+                  onCityChanged: (value) {
+                    setState(() {
+                      selectedCity = value;
+                    });
+                  }, // ciudad seleccionada
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: _register,
+                  onPressed: _register, 
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(vertical: 15),
