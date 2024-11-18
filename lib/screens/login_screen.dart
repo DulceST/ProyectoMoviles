@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 TextButton(
                   onPressed: () {
-                    // Lógica para navegar a la pantalla de registro
+                    Navigator.popAndPushNamed(context, '/register');
                   },
                   child: const Text('Registrar'),
                 ),

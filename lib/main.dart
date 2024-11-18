@@ -4,6 +4,7 @@ import 'package:proyecto_moviles/screens/add_location_screen.dart';
 import 'package:proyecto_moviles/screens/home_screen.dart';
 import 'package:proyecto_moviles/screens/login_screen.dart';
 import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
+import 'package:proyecto_moviles/screens/register_screen.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized(); // Asegura que la app esté completamente inicializada
@@ -22,8 +23,9 @@ class MainApp extends StatelessWidget {
       routes: {
        "/home": (context) => const HomeScreen(),
        "/recycling_map": (context) => RecyclingMapScreen(),
-       "/add_location": (context)=> AddLocationScreen(),
-       "/login": (contect)=> const LoginScreen()
+       "/add_location": (context) => AddLocationScreen(),
+       "/login": (context) => const LoginScreen(),
+       "/register": (context) => const RegisterScreen(),
       },
     );
   }

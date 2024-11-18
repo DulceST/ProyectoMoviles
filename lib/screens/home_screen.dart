@@ -1,8 +1,6 @@
 import 'package:animated_floating_buttons/widgets/animated_floating_action_button.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,7 +17,7 @@ final GlobalKey<AnimatedFloatingActionButtonState> key =GlobalKey<AnimatedFloati
     return Scaffold(
       appBar: AppBar(),
       bottomNavigationBar: ConvexAppBar(
-        items: [
+        items: const [
           TabItem(icon: Icons.home, title: 'Home'),
           TabItem(icon: Icons.map, title: 'Recycling Map'),
           TabItem(icon: Icons.exit_to_app, title: 'Exit'),
