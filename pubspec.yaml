@@ -22,6 +22,10 @@ dependencies:
   geolocator: ^9.0.1
   #boton flotante
   animated_floating_buttons: 
+  google_fonts: ^2.3.0
+  flutter_svg: ^1.0.0
+  font_awesome_flutter:
+  
 
 dev_dependencies:
   flutter_test:

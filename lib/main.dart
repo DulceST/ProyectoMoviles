@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto_moviles/screens/add_location_screen.dart';
 import 'package:proyecto_moviles/screens/home_screen.dart';
+import 'package:proyecto_moviles/screens/login_screen.dart';
 import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
 
 void main() async{
@@ -15,12 +16,14 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: HomeScreen(),
+    return MaterialApp(   
+      debugShowCheckedModeBanner: false,
+      home: const LoginScreen(),
       routes: {
-       "/home": (context) => HomeScreen(),
+       "/home": (context) => const HomeScreen(),
        "/recycling_map": (context) => RecyclingMapScreen(),
        "/add_location": (context)=> AddLocationScreen(),
+       "/login": (contect)=> const LoginScreen()
       },
     );
   }
