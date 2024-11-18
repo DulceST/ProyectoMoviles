@@ -1,14 +1,33 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthServices{
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   //Creacion de la cuenta 
-  Future createAcount(String email, String password)async{
+  Future createAcount(String email, String password, String user, String phone, String state, String city)async{
     try {
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
       print(userCredential.user);
-      return(userCredential.user?.uid);//el uid es el id del usuario 
+      
+      String userId = userCredential.user?.uid ?? ''; // Obtener el UID del usuario recién creado
+
+      // Verificar si el UID es válido antes de proceder
+    if (userId.isNotEmpty) {
+      // Crear un documento en Firestore con la información del usuario
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'user': user,
+        'email': email,
+        'password': password,
+        'phone': phone,
+        'state': state,
+        'city': city,
+        
+      });
+      return userId; 
+    }else{
+       return null;
+    }    
     } on FirebaseAuthException catch (e) {
       //password debil 
       if(e.code == 'weak-password'){

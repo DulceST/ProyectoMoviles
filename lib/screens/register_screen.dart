@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proyecto_moviles/utils/auth.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,35 +12,72 @@ class _RegisterScreen extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Controladores para los campos
-  final _nameController = TextEditingController();
-  final _surnameController = TextEditingController();
+  final _userController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
   final _phoneController = TextEditingController();
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
-  final _addressController = TextEditingController();
+  final AuthServices _authServices = AuthServices();
 
   // Método para manejar el registro
-  void _register() {
-    if (_formKey.currentState?.validate() == true) {
-      // Aquí puedes añadir la lógica para registrar al usuario
+  void _register() async {
+  if (_formKey.currentState?.validate() == true) {
+    String user = _userController.text;
+    String email = _emailController.text;
+    String password = _passwordController.text;
+    String phone = _phoneController.text;
+    String city = _cityController.text;
+    String state = _stateController.text;
+
+    // Llamar al método de creación de cuenta
+    var result = await _authServices.createAcount(
+      email, password, user,  phone, city, state,
+    );
+
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al crear la cuenta')),
+      );
+    } else if (result == 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Contraseña débil')),
+      );
+    } else if (result == 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El correo ya está en uso')),
+      );
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Usuario registrado exitosamente')),
       );
+      
+      // Limpiar los campos del formulario
+      _userController.clear();
+      _emailController.clear();
+      _passwordController.clear();
+      _phoneController.clear();
+      _cityController.clear();
+      _stateController.clear();
+
+      // Redirigir al login
+      Navigator.popAndPushNamed(context, '/login');
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        
         backgroundColor: Colors.green,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.popAndPushNamed(context, '/login');
+            // Navega de vuelta a la pantalla de login
+            Navigator.pop(context);
           },
         ),
       ),
@@ -58,24 +96,12 @@ class _RegisterScreen extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 20),
                 _buildTextField(
-                  controller: _nameController,
-                  label: 'Nombres',
+                  controller: _userController,
+                  label: 'Usuario',
                   icon: Icons.person,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, ingresa tus nombres';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 15),
-                _buildTextField(
-                  controller: _surnameController,
-                  label: 'Apellidos',
-                  icon: Icons.person_outline,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, ingresa tus apellidos';
+                      return 'Por favor, ingresa tu usuario';
                     }
                     return null;
                   },
@@ -108,19 +134,6 @@ class _RegisterScreen extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 15),
                 _buildTextField(
-                  controller: _confirmPasswordController,
-                  label: 'Confirmar Contraseña',
-                  icon: Icons.lock_outline,
-                  obscureText: true,
-                  validator: (value) {
-                    if (value != _passwordController.text) {
-                      return 'Las contraseñas no coinciden';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 15),
-                _buildTextField(
                   controller: _phoneController,
                   label: 'Teléfono',
                   icon: Icons.phone,
@@ -128,18 +141,6 @@ class _RegisterScreen extends State<RegisterScreen> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Por favor, ingresa un número de teléfono';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 15),
-                _buildTextField(
-                  controller: _cityController,
-                  label: 'Ciudad',
-                  icon: Icons.location_city,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor, ingresa tu ciudad';
                     }
                     return null;
                   },
@@ -158,12 +159,12 @@ class _RegisterScreen extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 15),
                 _buildTextField(
-                  controller: _addressController,
-                  label: 'Dirección',
-                  icon: Icons.home,
+                  controller: _cityController,
+                  label: 'Ciudad',
+                  icon: Icons.location_city,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Por favor, ingresa tu dirección';
+                      return 'Por favor, ingresa tu ciudad';
                     }
                     return null;
                   },
@@ -201,8 +202,8 @@ class _RegisterScreen extends State<RegisterScreen> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.green),
-        border: OutlineInputBorder(),
-        focusedBorder: OutlineInputBorder(
+        border: const OutlineInputBorder(),
+        focusedBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: Colors.green),
         ),
       ),

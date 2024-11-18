@@ -43,9 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
             TextField(
               controller: _usernameController,
               decoration: const InputDecoration(
-                labelText: 'Usuario',
+                labelText: 'Email',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
+                prefixIcon: Icon(Icons.email),
               ),
             ),
             const SizedBox(height: 20),
@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.popAndPushNamed(context, '/register');
+                    Navigator.pushNamed(context, '/register');
                   },
                   child: const Text('Registrar'),
                 ),
@@ -98,7 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: const Text('Iniciar sesión'),
             ),
             const SizedBox(height: 20),
-            // Enlaces para "Olvidé mi contraseña" y "Registrar"
             const SizedBox(height: 30),
             const Text('O inicia sesión con'),
             const SizedBox(height: 10),
