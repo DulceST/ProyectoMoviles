@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:proyecto_moviles/screens/home_screen.dart';
+import 'package:proyecto_moviles/utils/auth.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -8,29 +9,25 @@ class LoginScreen extends StatefulWidget {
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
+  
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
+  final AuthServices _auth = AuthServices();
+  
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  void _login() {
-    String username = _usernameController.text;
-    String password = _passwordController.text;
+  void showSnackBar(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 2),
+    ),
+  );
+}
 
-    if (username == "ecoUser" && password == "ecoPassword") {
-      // Navegar a la siguiente pantalla
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else {
-      // Mostrar mensaje de error
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Credenciales incorrectas. Intenta nuevamente."),
-      ));
-    }
-  }
 
 @override
   Widget build(BuildContext context) {
@@ -80,7 +77,20 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _login,
+              onPressed: () async{
+                _formKey.currentState?.save();
+                if(_formKey.currentState?.validate()==true){
+                  final v = _formKey.currentState?.value;
+                  var result = await _auth.singInEmailAndPassword(v?['username'], v?['password']);
+                  if(result == 1){
+                    showSnackBar(context, 'Usuario o contraseña equivocados');
+                  }else if(result == 2){
+                    showSnackBar(context, 'Usuario o contraseña equivocados');
+                  }else if(result != null){
+                    Navigator.popAndPushNamed(context, '/home');
+                  } 
+                }
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
@@ -89,7 +99,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
             // Enlaces para "Olvidé mi contraseña" y "Registrar"
-            
             const SizedBox(height: 30),
             const Text('O inicia sesión con'),
             const SizedBox(height: 10),

@@ -25,6 +25,8 @@ dependencies:
   google_fonts: ^2.3.0
   flutter_svg: ^1.0.0
   font_awesome_flutter:
+  firebase_auth:
+  flutter_form_builder:
   
 
 dev_dependencies:
