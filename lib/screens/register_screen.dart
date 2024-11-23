@@ -1,6 +1,5 @@
-import 'package:csc_picker/csc_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:proyecto_moviles/utils/auth.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -10,7 +9,12 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreen extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    throw UnimplementedError();
+  }
+  /*final _formKey = GlobalKey<FormState>();
   String? selectedCountry;
   String? selectedState; 
   String? selectedCity;
@@ -222,5 +226,5 @@ class _RegisterScreen extends State<RegisterScreen> {
       keyboardType: keyboardType,
       validator: validator,
     );
-  }
+  }*/
 }

@@ -1,11 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthServices{
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   //Creacion de la cuenta 
-  Future createAcount(String email, String password, String user, String phone, String country, String state, String city)async{
+  /*Future createAcount(String email, String password, String user, String phone, String country, String state, String city)async{
     try {
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
       print(userCredential.user);
@@ -29,6 +28,27 @@ class AuthServices{
     }else{
        return null;
     }    
+    } on FirebaseAuthException catch (e) {
+      //password debil 
+      if(e.code == 'weak-password'){
+        print('Contraseña es debil');
+        return 1; //si manda 1 es debil 
+      }else if(e.code == 'email-already-in-use'){//email ya este en uso 
+      print('El correo ya esta en uso ');
+      return 2; 
+      }//si no es ninguno de esos errores
+    }catch(e){
+      print(e);//manda el error 
+    }
+  }*/
+
+  Future createAcount(String email, String password)async{
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+      print(userCredential.user);
+      
+       // Obtener el UID del usuario recién creado
+ 
     } on FirebaseAuthException catch (e) {
       //password debil 
       if(e.code == 'weak-password'){

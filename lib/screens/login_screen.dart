@@ -10,9 +10,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();  // Usamos un GlobalKey de FormState
+  final GlobalKey<FormState> _formKey =
+      GlobalKey<FormState>(); // Usamos un GlobalKey de FormState
   final AuthServices _auth = AuthServices();
-
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (!regex.hasMatch(value)) {
                     return 'Ingresa un email válido';
                   }
-                  return null;  // Si es válido, retornamos null
+                  return null; // Si es válido, retornamos null
                 },
               ),
               const SizedBox(height: 20),
@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (value == null || value.isEmpty) {
                     return 'La contraseña es obligatoria';
                   }
-                  return null;  // Si es válido, retornamos null
+                  return null; // Si es válido, retornamos null
                 },
               ),
               Row(
@@ -83,7 +83,75 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/register');
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          String email = '';
+                          String password = '';
+                          return AlertDialog(
+                            title: const Text('Registro'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextField(
+                                  decoration: const InputDecoration(
+                                    labelText: 'Correo electrónico',
+                                  ),
+                                  onChanged: (value) {
+                                    email = value;
+                                  },
+                                ),
+                                TextField(
+                                  decoration: const InputDecoration(
+                                    labelText: 'Contraseña',
+                                  ),
+                                  obscureText: true,
+                                  onChanged: (value) {
+                                    password = value;
+                                  },
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context)
+                                      .pop(); // Cerrar el diálogo
+                                },
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () async {
+                                  // Llamar al método para crear cuenta
+                                  int? result =
+                                      await _auth.createAcount(email, password);
+                                  if (result == null) {
+                                    // Éxito: Redirigir al usuario o mostrar un mensaje de éxito
+                                    print('Cuenta creada exitosamente');
+                                  } else if (result == 1) {
+                                    // Contraseña débil
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content:
+                                              Text('La contraseña es débil.')),
+                                    );
+                                  } else if (result == 2) {
+                                    // Correo ya en uso
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'El correo ya está en uso.')),
+                                    );
+                                  }
+                                  Navigator.of(context)
+                                      .pop(); // Cerrar el diálogo
+                                },
+                                child: const Text('Registrar'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     },
                     child: const Text('Registrar'),
                   ),
@@ -97,7 +165,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     final password = _passwordController.text;
 
                     // Llamamos al método de autenticación
-                    var result = await _auth.singInEmailAndPassword(email, password);
+                    var result =
+                        await _auth.singInEmailAndPassword(email, password);
                     print('Resultado del login: $result');
 
                     if (result == 1 || result == 2) {
@@ -115,7 +184,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                 ),
                 child: const Text('Iniciar sesión'),
               ),
