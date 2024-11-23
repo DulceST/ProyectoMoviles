@@ -27,7 +27,7 @@ class MainApp extends StatelessWidget {
        "/add_location": (context) => AddLocationScreen(),
        "/login": (context) => const LoginScreen(),
        "/register": (context) => const RegisterScreen(),
-       "/onboarding": (context) => OnboardingScreen(),
+       "/onboarding": (context) => const OnboardingScreen(),
       },
     );
   }
