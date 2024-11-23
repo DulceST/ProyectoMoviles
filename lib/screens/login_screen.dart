@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:proyecto_moviles/utils/auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -176,9 +177,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       _emailController.clear();
                       _passwordController.clear();
 
-                      Navigator.popAndPushNamed(context, '/home');
-                    } else {
-                      showSnackBar(context, 'Error desconocido');
+                      // Verificar si es la primera vez que el usuario inicia sesión
+                      bool isNewUser = await _auth.isNewUser(email);
+
+                      if (isNewUser) {
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
+                        bool isOnboardingCompleted =
+                            prefs.getBool('isOnboardingCompleted') ?? false;
+
+                        if (!isOnboardingCompleted) {
+                          Navigator.pushNamed(context, '/onboarding');
+                        } else {
+                          Navigator.popAndPushNamed(context, '/home');
+                        }
+                      } else {
+                        // Si el usuario no es nuevo, redirigir directamente al home
+                        Navigator.popAndPushNamed(context, '/home');
+                      }
                     }
                   }
                 },

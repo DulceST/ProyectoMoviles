@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthServices{
@@ -62,6 +63,14 @@ class AuthServices{
       print(e);//manda el error 
     }
   }
+
+  Future<bool> isNewUser(String email) async {
+  // Aquí puedes verificar en tu base de datos si el usuario ya ha completado el onboarding
+  // Por ejemplo, comprobando si existe un campo en la base de datos que indique si es un nuevo usuario.
+  var userDoc = await FirebaseFirestore.instance.collection('users').doc(email).get();
+  return !userDoc.exists;  // Si el documento no existe, es un usuario nuevo
+}
+
 
   Future singInEmailAndPassword(String email, String password)async{
     try {

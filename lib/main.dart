@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:proyecto_moviles/screens/add_location_screen.dart';
 import 'package:proyecto_moviles/screens/home_screen.dart';
 import 'package:proyecto_moviles/screens/login_screen.dart';
+import 'package:proyecto_moviles/screens/onboarding_screen.dart';
 import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
 import 'package:proyecto_moviles/screens/register_screen.dart';
 
@@ -26,6 +27,7 @@ class MainApp extends StatelessWidget {
        "/add_location": (context) => AddLocationScreen(),
        "/login": (context) => const LoginScreen(),
        "/register": (context) => const RegisterScreen(),
+       "/onboarding": (context) => OnboardingScreen(),
       },
     );
   }

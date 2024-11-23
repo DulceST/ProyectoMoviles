@@ -28,6 +28,8 @@ dependencies:
   firebase_auth:
   flutter_form_builder:
   csc_picker:
+  supabase_flutter:
+  shared_preferences:
   
 
 dev_dependencies:
