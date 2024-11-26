@@ -19,9 +19,9 @@ List<UnbordingContent> contents = [
      description: "Elige el material que deseas reciclar y encuentra los puntos cercanos que lo reciben.",
   ),
   UnbordingContent(
-    title: 'Guarda tus Favoritas',
-    lottie: 'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/Animation%20-%201732602797744.json',
-    description: "Forma parte de la comunidad VerdeVida y contribuye al reciclaje. "
+    title: 'Regístrate y Únete',
+    //lottie: 'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/Animation%20-%201732602797744.json',
+    description: "Ingresa tus datos para formar parte de la comunidad VerdeVida y contribuir al reciclaje. "
                  "Juntos podemos construir un mundo más limpio y sostenible para todos.",
   ),
 ];
