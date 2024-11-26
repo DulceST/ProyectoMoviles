@@ -30,6 +30,7 @@ dependencies:
   csc_picker:
   supabase_flutter:
   shared_preferences:
+  toastification:
   
 
 dev_dependencies:
