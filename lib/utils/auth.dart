@@ -8,9 +8,8 @@ class AuthServices{
   Future createAcount(String email, String password)async{
     try {
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
-      String uid = userCredential.user!.uid;
-
-      await FirebaseFirestore.instance.collection('account').doc(uid).set({
+      print(userCredential);
+      await FirebaseFirestore.instance.collection('account').doc(email).set({
       'onboarding': false, 
       'email': email,      
     });

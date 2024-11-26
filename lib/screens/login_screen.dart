@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:proyecto_moviles/utils/auth.dart';
@@ -184,10 +185,39 @@ class _LoginScreenState extends State<LoginScreen> {
                       _emailController.clear();
                       _passwordController.clear();
                     } else if (result == 0) {
-                      Navigator.pushReplacementNamed(context, '/home');
+                      try {
+                        // Consultar la colección "account" para verificar el estado de "onboarding"
+                        DocumentSnapshot userDoc = await FirebaseFirestore
+                            .instance
+                            .collection('account')
+                            .doc(email)
+                            .get();
+
+                        // Validar si el documento existe y verificar el campo "onboarding"
+                        if (userDoc.exists) {
+                          bool onboardingCompleted =
+                              userDoc.get('onboarding') ?? false;
+
+                          if (!onboardingCompleted) {
+                            // Redirigir al onboarding si no está completado
+                            Navigator.pushReplacementNamed(
+                                context, '/onboarding');
+                          } else {
+                            // Redirigir al home si ya completó el onboarding
+                            Navigator.pushReplacementNamed(context, '/home');
+                          }
+                        } else {
+                          // Documento no encontrado, manejar el error
+                          showSnackBar(context,
+                              'Error al validar el estado de la cuenta.');
+                        }
+                      } catch (e) {
+                        print('Error al consultar Firestore: $e');
+                        showSnackBar(context,
+                            'Error al consultar el estado del usuario.');
+                      }
                       _emailController.clear();
                       _passwordController.clear();
-                      
                     }
                   }
                 },
