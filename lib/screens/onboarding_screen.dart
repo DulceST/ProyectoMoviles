@@ -1,48 +1,277 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:csc_picker/csc_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'package:proyecto_moviles/models/content_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class OnboardingScreen extends StatelessWidget {
+
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  int currentIndex = 0;
+  late PageController _controller;
+  final _formKey = GlobalKey<FormState>();
+  final _userController = TextEditingController();
+  final _phoneController = TextEditingController();
+  String? selectedCountry;
+  String? selectedState;
+  String? selectedCity;
+  Map<String, bool> materialPreferences = {
+    "Plástico": false,
+    "Papel": false,
+    "Vidrio": false,
+    "Metal": false,
+  };
+
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController(initialPage: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _userController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _completeOnboarding(String uid) async {
+  if (_formKey.currentState!.validate()) {
+    // Recopilamos los materiales seleccionados
+    List<String> selectedMaterials = materialPreferences.entries
+        .where((entry) => entry.value)
+        .map((entry) => entry.key)
+        .toList();
+
+    try {
+      // Obtener el email del usuario autenticado
+      String? email = FirebaseAuth.instance.currentUser?.email;
+
+      if (email == null) {
+        throw Exception('No se pudo obtener el email del usuario');
+      }
+
+      // Registrar datos en la colección 'users'
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'user': _userController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'country': selectedCountry,
+        'state': selectedState,
+        'city': selectedCity,
+        'materials': selectedMaterials,
+      });
+
+      // Actualizar el estado de onboarding a true en la colección 'account' usando el email
+      await FirebaseFirestore.instance.collection('account').doc(email).update({
+        'onboarding': true,
+      });
+
+      // Guardar localmente el estado del onboarding como completado
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('onboarding', true);
+
+      // Navegar al Home
+      Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      // Manejo de errores
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al registrar usuario: $e')),
+      );
+    }
+  }
+}
+
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
+      body: Column(
         children: [
-          _buildPage(
-            title: 'Bienvenido a la app',
-            description: 'Te ayudaremos a reciclar de manera más eficiente.',
+          Expanded(
+            child: PageView.builder(
+              controller: _controller,
+              itemCount: contents.length,
+              onPageChanged: (int index) {
+                setState(() {
+                  currentIndex = index; // Actualiza el índice actual
+                });
+              },
+              itemBuilder: (_, i) {
+                return Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      if (contents[i].lottie != null)
+                        Lottie.network(
+                          contents[i].lottie!,
+                          height: 300,
+                        ),
+                      Text(
+                        contents[i].title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      Text(
+                        contents[i].description,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      // Agregar checkboxes solo en una pestaña específica
+                      if (i == 1) // Aquí defines el índice de la pestaña
+                        Expanded(
+                          child: ListView(
+                            children: materialPreferences.keys.map((material) {
+                              return CheckboxListTile(
+                                title: Text(material),
+                                value: materialPreferences[material],
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    materialPreferences[material] =
+                                        value ?? false;
+                                  });
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      // Formulario para datos del usuario en la última pestaña
+                      if (i == 2)
+                        Expanded(
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              children: [
+                                TextFormField(
+                                  controller: _userController,
+                                  decoration: const InputDecoration(
+                                      labelText: "Usuario",
+                                      prefixIcon: Icon(Icons.person)),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Por favor ingresa tu nombre';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                                TextFormField(
+                                  controller: _phoneController,
+                                  decoration: const InputDecoration(
+                                    labelText: "Teléfono",
+                                    prefixIcon: Icon(Icons.phone),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Por favor ingresa tu teléfono';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 10),
+                                CSCPicker(
+                                  showStates: true,
+                                  showCities: true,
+                                  onCountryChanged: (value) {
+                                    setState(() {
+                                      selectedCountry = value;
+                                      selectedState = null;
+                                      selectedCity = null;
+                                    });
+                                  },
+                                  onStateChanged: (value) {
+                                    setState(() {
+                                      selectedState = value;
+                                      selectedCity = null;
+                                    });
+                                  },
+                                  onCityChanged: (value) {
+                                    setState(() {
+                                      selectedCity = value;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-          _buildPage(
-            title: 'Selecciona el material',
-            description: 'Elige el material que reciclas más a menudo.',
+          // Dots de la página
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              contents.length,
+              (index) => buildDot(index, context),
+            ),
           ),
-          _buildPage(
-            title: 'Completa tu perfil',
-            description: 'Ingresa algunos datos para personalizar tu experiencia.',
+          // Botón para navegar entre pantallas
+          Container(
+            height: 40,
+            margin: const EdgeInsets.all(40),
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                if (currentIndex == contents.length - 1) {
+                  String uid = FirebaseAuth.instance.currentUser!.uid;
+
+                  _completeOnboarding(uid); // Completar onboarding en la última página
+                } else {
+                  _controller.nextPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeIn,
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Text(
+                currentIndex == contents.length - 1 ? "Registrar" : "Next",
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          prefs.setBool('isOnboardingCompleted', true);
-
-          Navigator.pushReplacementNamed(context, '/home');
-        },
-        child: const Icon(Icons.check),
       ),
     );
   }
 
-  Widget _buildPage({required String title, required String description}) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(title, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        SizedBox(height: 20),
-        Text(description, style: TextStyle(fontSize: 16)),
-      ],
+  // Método para construir los dots
+  Container buildDot(int index, BuildContext context) {
+    return Container(
+      height: 10,
+      width: currentIndex == index ? 25 : 10,
+      margin: const EdgeInsets.only(right: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Theme.of(context).primaryColor,
+      ),
     );
   }
 }

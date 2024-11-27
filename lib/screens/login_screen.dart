@@ -1,7 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:proyecto_moviles/utils/auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -127,21 +127,31 @@ class _LoginScreenState extends State<LoginScreen> {
                                   int? result =
                                       await _auth.createAcount(email, password);
                                   if (result == null) {
-                                    // Éxito: Redirigir al usuario o mostrar un mensaje de éxito
-                                    print('Cuenta creada exitosamente');
-                                  } else if (result == 1) {
-                                    // Contraseña débil
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                          content:
-                                              Text('La contraseña es débil.')),
+                                        content:
+                                            Text('Cuenta creada exitosamente'),
+                                        backgroundColor: Colors
+                                            .green, // Color verde para éxito
+                                      ),
+                                    );
+                                  } else if (result == 1) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content:
+                                            Text('La contraseña es débil.'),
+                                        backgroundColor:
+                                            Colors.red, // Color rojo para error
+                                      ),
                                     );
                                   } else if (result == 2) {
-                                    // Correo ya en uso
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                          content: Text(
-                                              'El correo ya está en uso.')),
+                                        content:
+                                            Text('El correo ya está en uso.'),
+                                        backgroundColor:
+                                            Colors.red, // Color rojo para error
+                                      ),
                                     );
                                   }
                                   Navigator.of(context)
@@ -172,29 +182,42 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     if (result == 1 || result == 2) {
                       showSnackBar(context, 'Usuario o contraseña equivocados');
-                    } else if (result == 0) {
-                      // Limpiar los controladores de texto antes de navegar
                       _emailController.clear();
                       _passwordController.clear();
+                    } else if (result == 0) {
+                      try {
+                        // Consultar la colección "account" para verificar el estado de "onboarding"
+                        DocumentSnapshot userDoc = await FirebaseFirestore
+                            .instance
+                            .collection('account')
+                            .doc(email)
+                            .get();
 
-                      // Verificar si es la primera vez que el usuario inicia sesión
-                      bool isNewUser = await _auth.isNewUser(email);
+                        // Validar si el documento existe y verificar el campo "onboarding"
+                        if (userDoc.exists) {
+                          bool onboardingCompleted =
+                              userDoc.get('onboarding') ?? false;
 
-                      if (isNewUser) {
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
-                        bool isOnboardingCompleted =
-                            prefs.getBool('isOnboardingCompleted') ?? false;
-
-                        if (!isOnboardingCompleted) {
-                          Navigator.pushNamed(context, '/onboarding');
+                          if (!onboardingCompleted) {
+                            // Redirigir al onboarding si no está completado
+                            Navigator.pushReplacementNamed(
+                                context, '/onboarding');
+                          } else {
+                            // Redirigir al home si ya completó el onboarding
+                            Navigator.pushReplacementNamed(context, '/home');
+                          }
                         } else {
-                          Navigator.popAndPushNamed(context, '/home');
+                          // Documento no encontrado, manejar el error
+                          showSnackBar(context,
+                              'Error al validar el estado de la cuenta.');
                         }
-                      } else {
-                        // Si el usuario no es nuevo, redirigir directamente al home
-                        Navigator.popAndPushNamed(context, '/home');
+                      } catch (e) {
+                        print('Error al consultar Firestore: $e');
+                        showSnackBar(context,
+                            'Error al consultar el estado del usuario.');
                       }
+                      _emailController.clear();
+                      _passwordController.clear();
                     }
                   }
                 },
