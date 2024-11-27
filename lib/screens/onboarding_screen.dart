@@ -1,11 +1,14 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:csc_picker/csc_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:proyecto_moviles/models/content_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -29,7 +32,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     "Vidrio": false,
     "Metal": false,
   };
-
+  final ImagePicker _picker = ImagePicker();
+  XFile? _imageFile;
 
   @override
   void initState() {
@@ -45,54 +49,92 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      _imageFile = pickedFile;
+    });
+  }
+
   Future<void> _completeOnboarding(String uid) async {
-  if (_formKey.currentState!.validate()) {
-    // Recopilamos los materiales seleccionados
-    List<String> selectedMaterials = materialPreferences.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key)
-        .toList();
+    if (_formKey.currentState!.validate()) {
+      // Recopilamos los materiales seleccionados
+      List<String> selectedMaterials = materialPreferences.entries
+          .where((entry) => entry.value)
+          .map((entry) => entry.key)
+          .toList();
 
-    try {
-      // Obtener el email del usuario autenticado
-      String? email = FirebaseAuth.instance.currentUser?.email;
+      try {
+        // Obtener el email del usuario autenticado
+        String? email = FirebaseAuth.instance.currentUser?.email;
+        String? imageUrl;
 
-      if (email == null) {
-        throw Exception('No se pudo obtener el email del usuario');
+        if (email == null) {
+          throw Exception('No se pudo obtener el email del usuario');
+        }
+
+        // Subir imagen si fue seleccionada
+        if (_imageFile != null) {
+          final fileBytes = await _imageFile!.readAsBytes();
+          final fileName =
+              'profile_pictures/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+          // Subir a Supabase Storage
+          final supabaseStorage =
+              Supabase.instance.client.storage.from('users');
+          final uploadResponse =
+              await supabaseStorage.upload(fileName, fileBytes as File);
+
+          if (uploadResponse.error == null) {
+            // Obtener la URL pública de la imagen
+            imageUrl = await supabaseStorage.getPublicUrl(fileName);
+          } else {
+            // Manejo de errores de subida
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(
+                      'Error al subir la imagen: ${uploadResponse.error?.message}')),
+            );
+          }
+        } else {
+          // Si no se sube ninguna imagen, asignar una imagen por defecto
+          imageUrl =
+              'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png';
+        }
+
+        // Registrar datos en la colección 'users'
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'user': _userController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'country': selectedCountry,
+          'state': selectedState,
+          'city': selectedCity,
+          'materials': selectedMaterials,
+          'profileImage': imageUrl,
+        });
+
+        // Actualizar el estado de onboarding a true en la colección 'account' usando el email
+        await FirebaseFirestore.instance
+            .collection('account')
+            .doc(email)
+            .update({
+          'onboarding': true,
+        });
+
+        // Guardar localmente el estado del onboarding como completado
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('onboarding', true);
+
+        // Navegar al Home
+        Navigator.pushReplacementNamed(context, '/home');
+      } catch (e) {
+        // Manejo de errores
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al registrar usuario: $e')),
+        );
       }
-
-      // Registrar datos en la colección 'users'
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'user': _userController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'country': selectedCountry,
-        'state': selectedState,
-        'city': selectedCity,
-        'materials': selectedMaterials,
-      });
-
-      // Actualizar el estado de onboarding a true en la colección 'account' usando el email
-      await FirebaseFirestore.instance.collection('account').doc(email).update({
-        'onboarding': true,
-      });
-
-      // Guardar localmente el estado del onboarding como completado
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('onboarding', true);
-
-      // Navegar al Home
-      Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
-      // Manejo de errores
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al registrar usuario: $e')),
-      );
     }
   }
-}
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -209,6 +251,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     });
                                   },
                                 ),
+                                const SizedBox(height: 20),
+                                // Mostrar la imagen seleccionada o predeterminada
+                                GestureDetector(
+                                  onTap: _pickImage,
+                                  child: CircleAvatar(
+                                    radius: 50,
+                                    backgroundImage: _imageFile != null
+                                        ? FileImage(File(_imageFile!.path))
+                                        : const NetworkImage(
+                                            'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png'), // Imagen predeterminada
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -237,7 +291,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 if (currentIndex == contents.length - 1) {
                   String uid = FirebaseAuth.instance.currentUser!.uid;
 
-                  _completeOnboarding(uid); // Completar onboarding en la última página
+                  _completeOnboarding(
+                      uid); // Completar onboarding en la última página
                 } else {
                   _controller.nextPage(
                     duration: const Duration(milliseconds: 300),
@@ -274,4 +329,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
+}
+
+extension on String {
+  get error => null;
 }

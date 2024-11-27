@@ -32,6 +32,9 @@ dependencies:
   shared_preferences:
   toastification:
   lottie: 
+  image_picker:
+
+
   
 
 dev_dependencies:
