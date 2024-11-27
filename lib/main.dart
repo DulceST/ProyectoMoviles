@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:proyecto_moviles/screens/add_event_screen.dart';
 import 'package:proyecto_moviles/screens/add_location_screen.dart';
 import 'package:proyecto_moviles/screens/home_screen.dart';
 import 'package:proyecto_moviles/screens/information_screen.dart';
@@ -39,6 +40,7 @@ class MainApp extends StatelessWidget {
        "/profile":(context) => const ProfileScreen(),
        "/information":(context) => InformationScreen(),
        "/onboarding": (context) => OnboardingScreen(),
+       "/add_event" : (context)=> AddEventScreen(),
       },
     );
   }
