@@ -22,6 +22,7 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Perfil'),
+        backgroundColor: Colors.green.shade700,
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: _getUserData(),
@@ -49,32 +50,66 @@ class ProfileScreen extends StatelessWidget {
           String country = userData['country'] ?? 'No disponible';
           String state = userData['state'] ?? 'No disponible';
           String city = userData['city'] ?? 'No disponible';
-          String profileImage = userData['profileImage'] ?? 'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png';
+          String profileImage = userData['profileImage'] ??
+              'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png';
 
-          return Padding(
+          return Container(
             padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade50, Colors.green.shade200],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Mostrar la imagen de perfil
                 CircleAvatar(
-                  radius: 50,
+                  radius: 60,
                   backgroundImage: NetworkImage(profileImage),
                 ),
                 const SizedBox(height: 20),
-                Text('Nombre: $userName', style: Theme.of(context).textTheme.titleLarge),
+                // Nombre del usuario
+                Text(
+                  userName,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        color: Colors.green.shade900,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
                 const SizedBox(height: 10),
-                Text('Teléfono: $phone', style: Theme.of(context).textTheme.bodyMedium),  // Cambiado de bodyText1 a bodyMedium
+                Divider(color: Colors.green.shade700, thickness: 1),
                 const SizedBox(height: 10),
-                Text('País: $country', style: Theme.of(context).textTheme.bodyMedium),  // Cambiado de bodyText1 a bodyMedium
-                const SizedBox(height: 10),
-                Text('Estado: $state', style: Theme.of(context).textTheme.bodyMedium),  // Cambiado de bodyText1 a bodyMedium
-                const SizedBox(height: 10),
-                Text('Ciudad: $city', style: Theme.of(context).textTheme.bodyMedium),  // Cambiado de bodyText1 a bodyMedium
+                // Información adicional
+                _buildInfoTile('Teléfono', phone, context),
+                _buildInfoTile('País', country, context),
+                _buildInfoTile('Estado', state, context),
+                _buildInfoTile('Ciudad', city, context),
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(String title, String value, BuildContext context) {
+    return ListTile(
+      leading: Icon(Icons.info, color: Colors.green.shade700),
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.green.shade800,
+            ),
+      ),
+      subtitle: Text(
+        value,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.green.shade600,
+            ),
       ),
     );
   }

@@ -26,7 +26,7 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
 
   Future<void> loadCustomIcons() async {
     eventIcon = await BitmapDescriptor.fromAssetImage(
-      ImageConfiguration(size: Size(20, 20)),
+      const ImageConfiguration(size: Size(20, 20)),
       'assets/green_pin.png', // Ruta del ícono personalizado
     );
   }
@@ -89,12 +89,12 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Detalles del punto'),
+        title: const Text('Detalles del punto'),
         content: Text('Creado por: $creator\nDirección: ${doc.data()?['address']}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cerrar'),
+            child: const Text('Cerrar'),
           ),
         ],
       ),
@@ -114,7 +114,7 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cerrar'),
+            child: const Text('Cerrar'),
           ),
         ],
       ),
@@ -125,7 +125,7 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Puntos de Reciclaje'),
+        title: const Text('Puntos de Reciclaje'),
         actions: [
           IconButton(
             icon: Icon(showMap ? Icons.list : Icons.map),
@@ -140,7 +140,7 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
       body: showMap
           ? GoogleMap(
               onMapCreated: (controller) => mapController = controller,
-              initialCameraPosition: CameraPosition(
+              initialCameraPosition: const CameraPosition(
                 target: LatLng(19.432608, -99.133209), // Ubicación inicial
                 zoom: 12,
               ),

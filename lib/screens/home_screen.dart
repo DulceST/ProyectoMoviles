@@ -3,7 +3,6 @@ import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto_moviles/screens/information_screen.dart';
-import 'package:proyecto_moviles/screens/add_event_screen.dart';
 import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
 import 'package:proyecto_moviles/screens/active_events.dart';
 

@@ -32,6 +32,7 @@ dependencies:
   shared_preferences:
   lottie:
   toastification:
+  image_picker:
   
   
   #carrusel de imagenes 
