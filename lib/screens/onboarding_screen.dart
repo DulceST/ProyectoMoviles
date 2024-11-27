@@ -68,34 +68,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         // Obtener el email del usuario autenticado
         String? email = FirebaseAuth.instance.currentUser?.email;
         String? imageUrl;
+        String? uid = FirebaseAuth.instance.currentUser?.uid;
 
-        if (email == null) {
-          throw Exception('No se pudo obtener el email del usuario');
+
+        if (uid == null) {
+          throw Exception('Usuario no autenticado');
         }
 
         // Subir imagen si fue seleccionada
         if (_imageFile != null) {
           final fileBytes = await _imageFile!.readAsBytes();
+
+          // Crear la ruta del archivo, incluyendo el uid en el bucket 'users'
           final fileName =
-              'profile_pictures/${DateTime.now().millisecondsSinceEpoch}.jpg';
+              'users/$uid/profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
           // Subir a Supabase Storage
           final supabaseStorage =
               Supabase.instance.client.storage.from('users');
-          final uploadResponse =
-              await supabaseStorage.upload(fileName, fileBytes as File);
+          final uploadResponse = await supabaseStorage.uploadBinary(
+            fileName,
+            fileBytes,
+            fileOptions: const FileOptions(
+                upsert: true), // Sobrescribe si el archivo existe
+          );
 
-          if (uploadResponse.error == null) {
-            // Obtener la URL pública de la imagen
-            imageUrl = await supabaseStorage.getPublicUrl(fileName);
-          } else {
-            // Manejo de errores de subida
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(
-                      'Error al subir la imagen: ${uploadResponse.error?.message}')),
-            );
+          if (uploadResponse.error != null) {
+            throw Exception(
+                'Error al subir la imagen: ${uploadResponse.error!.message}');
           }
+
+          // Obtener la URL pública de la imagen (opcional, según tu configuración)
+          imageUrl = supabaseStorage.getPublicUrl(fileName);
         } else {
           // Si no se sube ninguna imagen, asignar una imagen por defecto
           imageUrl =

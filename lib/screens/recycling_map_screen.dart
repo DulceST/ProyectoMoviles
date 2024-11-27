@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyecto_moviles/models/recycling_location.dart';
 
 class RecyclingMapScreen extends StatefulWidget {
+  const RecyclingMapScreen({super.key});
+
   @override
   _RecyclingMapScreenState createState() => _RecyclingMapScreenState();
 }
@@ -24,7 +26,7 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
       for (var doc in snapshot.docs) {
         final data = doc.data();
         final recyclingLocation = RecyclingLocation.fromMap(data);
-        
+
         markers.add(
           Marker(
             markerId: MarkerId(recyclingLocation.id),
@@ -63,45 +65,52 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Puntos de Reciclaje'),
-        actions: [
-          IconButton(
-            icon: Icon(showMap ? Icons.list : Icons.map),
-            onPressed: () {
-              setState(() {
-                showMap = !showMap; // Alterna entre mapa y lista
-              });
-            },
+      body: Stack(
+        children: [
+          showMap
+              ? GoogleMap(
+                  onMapCreated: (controller) => mapController = controller,
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(19.432608, -99.133209), // Ubicación inicial
+                    zoom: 12,
+                  ),
+                  markers: markers,
+                )
+              : ListView(
+                  children: markers.map((marker) {
+                    return ListTile(
+                      title: Text(marker.infoWindow.title ?? ''),
+                      subtitle: Text(marker.infoWindow.snippet ?? ''),
+                      onTap: () => showCreatorInfo(marker.markerId.value),
+                    );
+                  }).toList(),
+                ),
+          Positioned(
+            top: 50, // Ajusta la posición
+            right: 16, // Ajusta la posición
+            child: FloatingActionButton(
+              heroTag: null, // Desactiva el Hero implícito
+              onPressed: () {
+                setState(() {
+                  showMap = !showMap; // Alterna entre mapa y lista
+                });
+              },
+              tooltip: showMap ? 'Ver Lista' : 'Ver Mapa',
+              backgroundColor: Colors.green,
+              child: Icon(showMap ? Icons.list : Icons.map),
+            ),
           ),
         ],
       ),
-      body: showMap 
-        ? GoogleMap(
-            onMapCreated: (controller) => mapController = controller,
-            initialCameraPosition: CameraPosition(
-              target: LatLng(19.432608, -99.133209), // Ubicación inicial
-              zoom: 12,
-            ),
-            markers: markers,
-          )
-        : ListView(
-            children: markers.map((marker) {
-              return ListTile(
-                title: Text(marker.infoWindow.title ?? ''),
-                subtitle: Text(marker.infoWindow.snippet ?? ''),
-                onTap: () => showCreatorInfo(marker.markerId.value),
-              );
-            }).toList(),
-          ),
       floatingActionButton: Align(
         alignment: Alignment.bottomLeft,
         child: FloatingActionButton(
+          heroTag: null, // Desactiva el Hero implícito
           onPressed: () {
             Navigator.pushNamed(context, "/add_location");
           },
-          tooltip: 'Add Location',
-          child: Icon(Icons.add_location),
+          tooltip: 'Agregar Ubicación',
+          child: const Icon(Icons.add_location),
         ),
       ),
     );

@@ -2,6 +2,8 @@ import 'package:animated_floating_buttons/widgets/animated_floating_action_butto
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:proyecto_moviles/screens/information_screen.dart';
+import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,9 +13,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-final GlobalKey<AnimatedFloatingActionButtonState> key =GlobalKey<AnimatedFloatingActionButtonState>();
+  final GlobalKey<AnimatedFloatingActionButtonState> key =
+      GlobalKey<AnimatedFloatingActionButtonState>();
 
-String email = ''; // Aquí almacenaremos el correo
+  String email = ''; // Aquí almacenaremos el correo
+  int _currentIndex = 0; // Controla la pantalla actual
 
   @override
   void initState() {
@@ -30,12 +34,19 @@ String email = ''; // Aquí almacenaremos el correo
       });
     }
   }
+
+  // Métodos para obtener las pantallas
+  final List<Widget> _pages = [
+    const Center(child: Text('Bienvenido a Home', style: TextStyle(fontSize: 20))),
+    const RecyclingMapScreen(), // Widget para el mapa
+    InformationScreen(), // Widget para la información
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green, // Fondo verde en la AppBar
-        
       ),
       drawer: Drawer(
         child: ListView(
@@ -84,18 +95,22 @@ String email = ''; // Aquí almacenaremos el correo
           ],
         ),
       ),
+      body: IndexedStack(
+        index: _currentIndex, // Muestra la pantalla correspondiente al índice
+        children: _pages, // Aquí estamos usando el campo _pages
+      ),
       bottomNavigationBar: ConvexAppBar(
         backgroundColor: Colors.green, // Fondo verde en el ConvexAppBar
         items: const [
           TabItem(icon: Icons.home, title: 'Home'),
           TabItem(icon: Icons.map, title: 'Recycling Map'),
-          TabItem(icon: Icons.exit_to_app, title: 'Exit'),
+          TabItem(icon: Icons.info_rounded, title: 'Informacion'),
         ],
         initialActiveIndex: 0,
         onTap: (int index) {
-          if (index == 1) {
-            Navigator.pushNamed(context, "/recycling_map");
-          }
+          setState(() {
+            _currentIndex = index; // Cambia la pantalla al índice seleccionado
+          });
         },
       ),
     );
