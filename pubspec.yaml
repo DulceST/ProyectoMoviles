@@ -31,6 +31,7 @@ dependencies:
   supabase_flutter:
   shared_preferences:
   lottie:
+  toastification:
   
   
   #carrusel de imagenes 

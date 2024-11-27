@@ -63,49 +63,44 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          showMap 
-            ? GoogleMap(
-                onMapCreated: (controller) => mapController = controller,
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(19.432608, -99.133209), // Ubicación inicial
-                  zoom: 12,
-                ),
-                markers: markers,
-              )
-            : ListView(
-                children: markers.map((marker) {
-                  return ListTile(
-                    title: Text(marker.infoWindow.title ?? ''),
-                    subtitle: Text(marker.infoWindow.snippet ?? ''),
-                    onTap: () => showCreatorInfo(marker.markerId.value),
-                  );
-                }).toList(),
-              ),
-          Positioned(
-            top: 50, // Ajusta la posición
-            right: 16, // Ajusta la posición
-            child: FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  showMap = !showMap; // Alterna entre mapa y lista
-                });
-              },
-              tooltip: showMap ? 'Ver Lista' : 'Ver Mapa',
-              backgroundColor: Colors.green,
-              child: Icon(showMap ? Icons.list : Icons.map),
-            ),
+      appBar: AppBar(
+        title: Text('Puntos de Reciclaje'),
+        actions: [
+          IconButton(
+            icon: Icon(showMap ? Icons.list : Icons.map),
+            onPressed: () {
+              setState(() {
+                showMap = !showMap; // Alterna entre mapa y lista
+              });
+            },
           ),
         ],
       ),
+      body: showMap 
+        ? GoogleMap(
+            onMapCreated: (controller) => mapController = controller,
+            initialCameraPosition: CameraPosition(
+              target: LatLng(19.432608, -99.133209), // Ubicación inicial
+              zoom: 12,
+            ),
+            markers: markers,
+          )
+        : ListView(
+            children: markers.map((marker) {
+              return ListTile(
+                title: Text(marker.infoWindow.title ?? ''),
+                subtitle: Text(marker.infoWindow.snippet ?? ''),
+                onTap: () => showCreatorInfo(marker.markerId.value),
+              );
+            }).toList(),
+          ),
       floatingActionButton: Align(
         alignment: Alignment.bottomLeft,
         child: FloatingActionButton(
           onPressed: () {
             Navigator.pushNamed(context, "/add_location");
           },
-          tooltip: 'Agregar Ubicación',
+          tooltip: 'Add Location',
           child: Icon(Icons.add_location),
         ),
       ),
