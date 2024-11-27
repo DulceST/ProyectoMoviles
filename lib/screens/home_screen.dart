@@ -3,7 +3,9 @@ import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto_moviles/screens/information_screen.dart';
+import 'package:proyecto_moviles/screens/add_event_screen.dart';
 import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
+import 'package:proyecto_moviles/screens/active_events.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,8 +40,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // Métodos para obtener las pantallas
   final List<Widget> _pages = [
     const Center(child: Text('Bienvenido a Home', style: TextStyle(fontSize: 20))),
-    const RecyclingMapScreen(), // Widget para el mapa
+    RecyclingMapScreen(), // Widget para el mapa
     InformationScreen(), // Widget para la información
+    //const Center(child: Text('Bienvenido a eventos', style: TextStyle(fontSize: 20))),
+    ActiveEventsScreen(),
   ];
 
   @override
@@ -47,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green, // Fondo verde en la AppBar
+        title: const Text('Reciclaje'),
       ),
       drawer: Drawer(
         child: ListView(
@@ -78,14 +83,24 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.color_lens, color: Colors.green), // Ícono verde
-              title: const Text('Cambiar colores y letras', style: TextStyle(color: Colors.green)), // Texto verde
+              title: const Text('Cambiar colores y letras',
+                  style: TextStyle(color: Colors.green)), // Texto verde
               onTap: () {
                 Navigator.pushNamed(context, '/changeColors'); // Navegar a la pantalla de cambiar colores
               },
             ),
             ListTile(
+              leading: const Icon(Icons.color_lens, color: Colors.green), // Ícono verde
+              title: const Text('Agregar un evento',
+                  style: TextStyle(color: Colors.green)), // Texto verde
+              onTap: () {
+                Navigator.pushNamed(context, '/add_event'); // Navegar a la pantalla de cambiar colores
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.exit_to_app, color: Colors.green), // Ícono verde
-              title: const Text('Cerrar sesión', style: TextStyle(color: Colors.green)), // Texto verde
+              title: const Text('Cerrar sesión',
+                  style: TextStyle(color: Colors.green)), // Texto verde
               onTap: () async {
                 // Cerrar sesión en Firebase
                 await FirebaseAuth.instance.signOut();
@@ -97,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: IndexedStack(
         index: _currentIndex, // Muestra la pantalla correspondiente al índice
-        children: _pages, // Aquí estamos usando el campo _pages
+        children: _pages,
       ),
       bottomNavigationBar: ConvexAppBar(
         backgroundColor: Colors.green, // Fondo verde en el ConvexAppBar
@@ -105,6 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
           TabItem(icon: Icons.home, title: 'Home'),
           TabItem(icon: Icons.map, title: 'Recycling Map'),
           TabItem(icon: Icons.info_rounded, title: 'Informacion'),
+          TabItem(icon: Icons.event,title: 'Eventos'),
         ],
         initialActiveIndex: 0,
         onTap: (int index) {
