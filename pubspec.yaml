@@ -30,10 +30,13 @@ dependencies:
   csc_picker:
   supabase_flutter:
   shared_preferences:
+  lottie:
   
+  
+  #carrusel de imagenes 
+  card_swiper:
 
 
-  
 
 dev_dependencies:
   flutter_test:
