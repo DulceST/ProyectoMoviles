@@ -17,36 +17,54 @@ class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<AnimatedFloatingActionButtonState> key =
       GlobalKey<AnimatedFloatingActionButtonState>();
 
-  String email = ''; // Aquí almacenaremos el correo
+  String email = 'Cargando...'; // Correo del usuario
+  String? photoUrl; // Foto de perfil
+  String providerId = 'Desconocido'; // Proveedor de autenticación
   int _currentIndex = 0; // Controla la pantalla actual
 
   @override
   void initState() {
     super.initState();
-    _getEmail(); // Obtener el correo cuando se inicie la pantalla
+    _getUserData(); // Obtener los datos del usuario
   }
 
-  // Método para obtener el correo desde Firebase
-  Future<void> _getEmail() async {
+  // Método para obtener los datos del usuario desde Firebase
+  Future<void> _getUserData() async {
     User? user = FirebaseAuth.instance.currentUser;
+
     if (user != null) {
       setState(() {
         email = user.email ?? 'Correo no disponible';
+        photoUrl = user.photoURL ??
+            'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png';
+        providerId = user.providerData.isNotEmpty
+            ? user.providerData.first.providerId
+            : 'Desconocido';
       });
     }
   }
 
   // Métodos para obtener las pantallas
   final List<Widget> _pages = [
-    const Center(child: Text('Bienvenido a Home', style: TextStyle(fontSize: 20))),
+    const Center(
+        child: Text('Bienvenido a Home', style: TextStyle(fontSize: 20))),
     RecyclingMapScreen(), // Widget para el mapa
     InformationScreen(), // Widget para la información
-    //const Center(child: Text('Bienvenido a eventos', style: TextStyle(fontSize: 20))),
-    ActiveEventsScreen(),
+    ActiveEventsScreen(), // Widget para eventos activos
   ];
 
   @override
   Widget build(BuildContext context) {
+    // Mapear proveedor de autenticación a logotipos
+    Map<String, String> providerLogos = {
+      'google.com': 'assets/google.png',
+      'facebook.com': 'assets/facebook.png',
+      'github.com': 'assets/github.png',
+      'password': 'assets/email.png',
+    };
+
+    String? providerLogo = providerLogos[providerId];
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green, // Fondo verde en la AppBar
@@ -60,22 +78,52 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: Colors.green[700], // Fondo verde oscuro en el DrawerHeader
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    email,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                  // Mostrar foto del usuario
+                  CircleAvatar(
+                    radius: 35,
+                    backgroundImage: NetworkImage(photoUrl ??
+                        'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png'),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Mostrar correo y logo del proveedor en una fila
+                        Row(
+                          children: [
+                            if (providerLogo != null)
+                              Image.asset(
+                                providerLogo,
+                                height: 20,
+                              ),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: Text(
+                                email,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.account_circle, color: Colors.green), // Ícono verde
-              title: const Text('Perfil', style: TextStyle(color: Colors.green)), // Texto verde
+              leading:
+                  const Icon(Icons.account_circle, color: Colors.green), // Ícono verde
+              title: const Text('Perfil',
+                  style: TextStyle(color: Colors.green)), // Texto verde
               onTap: () {
                 Navigator.pushNamed(context, '/profile');
               },
@@ -119,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
           TabItem(icon: Icons.home, title: 'Home'),
           TabItem(icon: Icons.map, title: 'Recycling Map'),
           TabItem(icon: Icons.info_rounded, title: 'Informacion'),
-          TabItem(icon: Icons.event,title: 'Eventos'),
+          TabItem(icon: Icons.event, title: 'Eventos'),
         ],
         initialActiveIndex: 0,
         onTap: (int index) {

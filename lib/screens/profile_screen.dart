@@ -27,22 +27,18 @@ class ProfileScreen extends StatelessWidget {
       body: FutureBuilder<DocumentSnapshot>(
         future: _getUserData(),
         builder: (context, snapshot) {
-          // Verificar si los datos se están cargando
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Verificar si ocurrió un error al obtener los datos
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          // Verificar si no se encontró ningún documento
           if (!snapshot.hasData || !snapshot.data!.exists) {
             return const Center(child: Text('No se encontraron datos del usuario.'));
           }
 
-          // Obtener los datos del documento
           var userData = snapshot.data!.data() as Map<String, dynamic>;
 
           String userName = userData['user'] ?? 'No disponible';
@@ -65,10 +61,11 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Mostrar la imagen de perfil
+                // Imagen de perfil
                 CircleAvatar(
-                  radius: 60,
+                  radius: 70,
                   backgroundImage: NetworkImage(profileImage),
+                  backgroundColor: Colors.green.shade100,
                 ),
                 const SizedBox(height: 20),
                 // Nombre del usuario
@@ -79,14 +76,20 @@ class ProfileScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
                 Divider(color: Colors.green.shade700, thickness: 1),
-                const SizedBox(height: 10),
-                // Información adicional
-                _buildInfoTile('Teléfono', phone, context),
-                _buildInfoTile('País', country, context),
-                _buildInfoTile('Estado', state, context),
-                _buildInfoTile('Ciudad', city, context),
+                const SizedBox(height: 20),
+                // Tarjeta de información
+                Expanded(
+                  child: ListView(
+                    children: [
+                      _buildInfoCard('Teléfono', phone, Icons.phone, context),
+                      _buildInfoCard('País', country, Icons.flag, context),
+                      _buildInfoCard('Estado', state, Icons.location_city, context),
+                      _buildInfoCard('Ciudad', city, Icons.location_on, context),
+                    ],
+                  ),
+                ),
               ],
             ),
           );
@@ -95,21 +98,45 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoTile(String title, String value, BuildContext context) {
-    return ListTile(
-      leading: Icon(Icons.info, color: Colors.green.shade700),
-      title: Text(
-        title,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.green.shade800,
-            ),
+  Widget _buildInfoCard(String title, String value, IconData icon, BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      elevation: 5,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
       ),
-      subtitle: Text(
-        value,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.green.shade600,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: Colors.green.shade100,
+              child: Icon(icon, color: Colors.green.shade700),
             ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade800,
+                        ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.green.shade600,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
