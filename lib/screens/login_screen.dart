@@ -76,12 +76,22 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _checkVerificationAndLogin() async {
+  await _auth.checkEmailVerification(
+    context,
+    () async {
+      // Si el correo está verificado, proceder con el inicio de sesión
+      await _handleLogin();
+    },
+  );
+}
+
   // Lógica para manejar el registro de usuarios
   Future<void> _handleRegister(String email, String password) async {
-    int? result = await _auth.createAcount(email, password);
+    int? result = await _auth.createAcount(email, password,context);
     if (result == null) {
       _showSnackBar(
-        'Cuenta creada exitosamente',
+        'Cuenta creada exitosamente, Se ha enviado un correo de verificación.',
         backgroundColor: Colors.green,
       );
     } else if (result == 1) {
@@ -107,6 +117,8 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
+
+  
 
   // Validar el estado del onboarding del usuario
   Future<void> _validateOnboardingStatus(String email) async {
@@ -277,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _handleLogin,
+          onPressed: _checkVerificationAndLogin,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             padding: const EdgeInsets.symmetric(
