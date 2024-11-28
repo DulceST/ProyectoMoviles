@@ -76,19 +76,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _checkVerificationAndLogin() async {
-  await _auth.checkEmailVerification(
-    context,
-    () async {
-      // Si el correo está verificado, proceder con el inicio de sesión
-      await _handleLogin();
-    },
-  );
-}
-
   // Lógica para manejar el registro de usuarios
   Future<void> _handleRegister(String email, String password) async {
-    int? result = await _auth.createAcount(email, password,context);
+    int? result = await _auth.createAcount(email, password, context);
     if (result == null) {
       _showSnackBar(
         'Cuenta creada exitosamente, Se ha enviado un correo de verificación.',
@@ -98,6 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _showSnackBar('La contraseña es débil.');
     } else if (result == 2) {
       _showSnackBar('El correo ya está en uso.');
+      _clearControllers();
     }
   }
 
@@ -113,12 +104,16 @@ class _LoginScreenState extends State<LoginScreen> {
         _showSnackBar('Usuario o contraseña equivocados');
         _clearControllers();
       } else if (result == 0) {
-        await _validateOnboardingStatus(email);
+         DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('account').doc(email).get();
+         if(userDoc.exists && userDoc['isVerified'] == true){
+          await _validateOnboardingStatus(email);
+         }else{
+          _showSnackBar('Correo no verificado. Por favor verifica tu correo.');
+          _clearControllers();
+         }
       }
     }
   }
-
-  
 
   // Validar el estado del onboarding del usuario
   Future<void> _validateOnboardingStatus(String email) async {
@@ -130,6 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
           .get();
 
       if (userDoc.exists) {
+        
         bool onboardingCompleted = userDoc.get('onboarding') ?? false;
         Navigator.pushReplacementNamed(
           context,
@@ -182,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-   void _showLoadingGif() {
+  void _showLoadingGif() {
     showDialog(
       context: context,
       barrierDismissible: false, // El usuario no puede cerrar el GIF
@@ -277,19 +273,23 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () {
                 // Lógica para recuperar la contraseña
               },
-              child: const Text('¿Olvidaste tu contraseña?',
-              style: TextStyle(color: Colors.green),),
+              child: const Text(
+                '¿Olvidaste tu contraseña?',
+                style: TextStyle(color: Colors.green),
+              ),
             ),
             TextButton(
               onPressed: _showRegisterDialog,
-              child: const Text('Registrar',
-              style: TextStyle(color: Colors.green),),
+              child: const Text(
+                'Registrar',
+                style: TextStyle(color: Colors.green),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 20),
         ElevatedButton(
-          onPressed: _checkVerificationAndLogin,
+          onPressed: _handleLogin,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             padding: const EdgeInsets.symmetric(
@@ -297,8 +297,10 @@ class _LoginScreenState extends State<LoginScreen> {
               vertical: 15,
             ),
           ),
-          child: const Text('Iniciar sesión',
-          style: TextStyle(color: Colors.white),),
+          child: const Text(
+            'Iniciar sesión',
+            style: TextStyle(color: Colors.white),
+          ),
         ),
         const SizedBox(height: 20),
         const Center(

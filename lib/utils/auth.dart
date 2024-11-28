@@ -20,10 +20,12 @@ class AuthServices {
       await FirebaseFirestore.instance.collection('account').doc(email).set({
         'onboarding': false,
         'email': email,
+        'isVerified': false,
       });
 
       User? user = userCredential.user;
       if (user != null) {
+        await user.sendEmailVerification();
         print('Correo de verificación enviado.');
       }
     } on FirebaseAuthException catch (e) {
@@ -59,15 +61,26 @@ class AuthServices {
   Future<void> checkEmailVerification(
       BuildContext context, VoidCallback onEmailVerified) async {
     try {
-      User? user = _auth.currentUser;
-      await user?.reload(); // Recargar los datos del usuario
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.reload(); // Recargar los datos del usuario
 
-      if (user != null && user.emailVerified) {
-        showSnackBar(context, 'Correo verificado.');
-        onEmailVerified(); // Ejecuta la función proporcionada
-      } else {
-        showSnackBar(
-            context, 'El correo no está verificado. Revisa tu bandeja de entrada.');
+        if (user.emailVerified) {
+          // El correo está verificado
+          // Actualizar el estado en Firestore
+          await FirebaseFirestore.instance
+              .collection('account')
+              .doc(user.email)
+              .update({
+            'isVerified': true, // Actualizar el campo isVerified
+          });
+
+          showSnackBar(context, 'Correo verificado.');
+          onEmailVerified(); // Ejecutar la función proporcionada
+        } else {
+          showSnackBar(context,
+              'El correo no está verificado. Revisa tu bandeja de entrada.');
+        }
       }
     } catch (e) {
       showSnackBar(context, 'Error al verificar el correo: $e');
