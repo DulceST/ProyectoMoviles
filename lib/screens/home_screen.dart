@@ -2,6 +2,8 @@ import 'package:animated_floating_buttons/widgets/animated_floating_action_butto
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:proyecto_moviles/providers/theme_provider.dart';
 import 'package:proyecto_moviles/screens/information_screen.dart';
 import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
 import 'package:proyecto_moviles/screens/active_events.dart';
@@ -53,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final drawerColor = Provider.of<ThemeProvider>(context).drawerColor;
     // Mapear proveedor de autenticación a logotipos
     Map<String, String> providerLogos = {
       'google.com': 'assets/google.png',
@@ -74,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.green[700], // Fondo verde oscuro en el DrawerHeader
+                color: drawerColor, // Fondo verde oscuro en el DrawerHeader
               ),
               child: Row(
                 children: [

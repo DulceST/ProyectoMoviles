@@ -33,6 +33,7 @@ dependencies:
   lottie:
   toastification:
   image_picker:
+  provider: 
   
   
   #carrusel de imagenes 

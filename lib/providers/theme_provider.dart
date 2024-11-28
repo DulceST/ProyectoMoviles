@@ -1,32 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  Color _primaryColor = Colors.green;
-  String _fontFamily = 'Roboto';
+  Color _drawerColor = Colors.green[700]!; // Color por defecto
 
-  Color get primaryColor => _primaryColor;
-  String get fontFamily => _fontFamily;
+  Color get drawerColor => _drawerColor;
 
-  // Devuelve un ThemeData que usa el color y fuente actuales
-  ThemeData get themeData {
-    return ThemeData(
-      primaryColor: _primaryColor,
-      textTheme: TextTheme(
-        bodyLarge: TextStyle(fontFamily: _fontFamily), // Estilo solo con la fuente
-        bodyMedium: TextStyle(fontFamily: _fontFamily), // Estilo solo con la fuente
-        bodySmall: TextStyle(fontFamily: _fontFamily), // Estilo solo con la fuente
-        // Se pueden agregar más estilos de texto si es necesario, sin cambiar el tamaño
-      ),
-    );
+  // Método para actualizar el color
+  void setDrawerColor(Color color) async {
+    _drawerColor = color;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt('drawerColor', color.value); // Guardar en persistencia
   }
 
-  void updateColor(Color color) {
-    _primaryColor = color;
-    notifyListeners();
-  }
-
-  void updateFontFamily(String fontFamily) {
-    _fontFamily = fontFamily;
-    notifyListeners();
+  // Método para cargar el color guardado
+  Future<void> loadDrawerColor() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.containsKey('drawerColor')) {
+      _drawerColor = Color(prefs.getInt('drawerColor')!);
+      notifyListeners();
+    }
   }
 }
