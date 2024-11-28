@@ -11,259 +11,253 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final GlobalKey<FormState> _formKey =
-      GlobalKey<FormState>(); // Usamos un GlobalKey de FormState
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final AuthServices _auth = AuthServices();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-  void showSnackBar(BuildContext context, String message) {
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // Método para mostrar un SnackBar
+  void _showSnackBar(String message, {Color backgroundColor = Colors.red}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
+        backgroundColor: backgroundColor,
         duration: const Duration(seconds: 2),
       ),
+    );
+  }
+
+  // Método para mostrar el cuadro de diálogo de registro
+  void _showRegisterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String email = '';
+        String password = '';
+        return AlertDialog(
+          title: const Text('Registro'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildTextField(
+                label: 'Correo electrónico',
+                onChanged: (value) => email = value,
+              ),
+              const SizedBox(height: 10),
+              _buildTextField(
+                label: 'Contraseña',
+                obscureText: true,
+                onChanged: (value) => password = value,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _handleRegister(email, password);
+                Navigator.pop(context); // Cerrar el diálogo
+              },
+              child: const Text('Registrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Lógica para manejar el registro de usuarios
+  Future<void> _handleRegister(String email, String password) async {
+    int? result = await _auth.createAcount(email, password);
+    if (result == null) {
+      _showSnackBar(
+        'Cuenta creada exitosamente',
+        backgroundColor: Colors.green,
+      );
+    } else if (result == 1) {
+      _showSnackBar('La contraseña es débil.');
+    } else if (result == 2) {
+      _showSnackBar('El correo ya está en uso.');
+    }
+  }
+
+  // Lógica para iniciar sesión
+  Future<void> _handleLogin() async {
+    if (_formKey.currentState?.validate() == true) {
+      final email = _emailController.text;
+      final password = _passwordController.text;
+
+      var result = await _auth.singInEmailAndPassword(email, password);
+
+      if (result == 1 || result == 2) {
+        _showSnackBar('Usuario o contraseña equivocados');
+        _clearControllers();
+      } else if (result == 0) {
+        await _validateOnboardingStatus(email);
+      }
+    }
+  }
+
+  // Validar el estado del onboarding del usuario
+  Future<void> _validateOnboardingStatus(String email) async {
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('account')
+          .doc(email)
+          .get();
+
+      if (userDoc.exists) {
+        bool onboardingCompleted = userDoc.get('onboarding') ?? false;
+        Navigator.pushReplacementNamed(
+          context,
+          onboardingCompleted ? '/home' : '/onboarding',
+        );
+      } else {
+        _showSnackBar('Error al validar el estado de la cuenta.');
+      }
+    } catch (e) {
+      print('Error al consultar Firestore: $e');
+      _showSnackBar('Error al consultar el estado del usuario.');
+    } finally {
+      _clearControllers();
+    }
+  }
+
+  // Limpiar los controladores
+  void _clearControllers() {
+    _emailController.clear();
+    _passwordController.clear();
+  }
+
+  // Método para construir un TextFormField
+  Widget _buildTextField({
+    required String label,
+    bool obscureText = false,
+    void Function(String)? onChanged,
+    TextEditingController? controller,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+      onChanged: onChanged,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return '$label es obligatorio';
+        }
+        if (label == 'Correo electrónico') {
+          final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+          if (!regex.hasMatch(value)) {
+            return 'Ingresa un email válido';
+          }
+        }
+        return null;
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey, // Asociamos el Form al GlobalKey
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 100),
+                Image.asset(
+                  'assets/planta.png',
+                  height: 150, // Altura personalizada
+                  width: 150, // Ancho personalizado
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'El email es obligatorio';
-                  }
-                  // Validar si es un email válido
-                  final regex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                  if (!regex.hasMatch(value)) {
-                    return 'Ingresa un email válido';
-                  }
-                  return null; // Si es válido, retornamos null
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Contraseña',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  label: 'Email',
+                  controller: _emailController,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'La contraseña es obligatoria';
-                  }
-                  return null; // Si es válido, retornamos null
-                },
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      // Lógica para recuperar la contraseña
-                    },
-                    child: const Text('¿Olvidaste tu contraseña?'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          String email = '';
-                          String password = '';
-                          return AlertDialog(
-                            title: const Text('Registro'),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                TextField(
-                                  decoration: const InputDecoration(
-                                    labelText: 'Correo electrónico',
-                                  ),
-                                  onChanged: (value) {
-                                    email = value;
-                                  },
-                                ),
-                                TextField(
-                                  decoration: const InputDecoration(
-                                    labelText: 'Contraseña',
-                                  ),
-                                  obscureText: true,
-                                  onChanged: (value) {
-                                    password = value;
-                                  },
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context)
-                                      .pop(); // Cerrar el diálogo
-                                },
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  // Llamar al método para crear cuenta
-                                  int? result =
-                                      await _auth.createAcount(email, password);
-                                  if (result == null) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content:
-                                            Text('Cuenta creada exitosamente'),
-                                        backgroundColor: Colors
-                                            .green, // Color verde para éxito
-                                      ),
-                                    );
-                                  } else if (result == 1) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content:
-                                            Text('La contraseña es débil.'),
-                                        backgroundColor:
-                                            Colors.red, // Color rojo para error
-                                      ),
-                                    );
-                                  } else if (result == 2) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content:
-                                            Text('El correo ya está en uso.'),
-                                        backgroundColor:
-                                            Colors.red, // Color rojo para error
-                                      ),
-                                    );
-                                  }
-                                  Navigator.of(context)
-                                      .pop(); // Cerrar el diálogo
-                                },
-                                child: const Text('Registrar'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    child: const Text('Registrar'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState?.validate() == true) {
-                    final email = _emailController.text;
-                    final password = _passwordController.text;
-
-                    // Llamamos al método de autenticación
-                    var result =
-                        await _auth.singInEmailAndPassword(email, password);
-                    print('Resultado del login: $result');
-
-                    if (result == 1 || result == 2) {
-                      showSnackBar(context, 'Usuario o contraseña equivocados');
-                      _emailController.clear();
-                      _passwordController.clear();
-                    } else if (result == 0) {
-                      try {
-                        // Consultar la colección "account" para verificar el estado de "onboarding"
-                        DocumentSnapshot userDoc = await FirebaseFirestore
-                            .instance
-                            .collection('account')
-                            .doc(email)
-                            .get();
-
-                        // Validar si el documento existe y verificar el campo "onboarding"
-                        if (userDoc.exists) {
-                          bool onboardingCompleted =
-                              userDoc.get('onboarding') ?? false;
-
-                          if (!onboardingCompleted) {
-                            // Redirigir al onboarding si no está completado
-                            Navigator.pushReplacementNamed(
-                                context, '/onboarding');
-                          } else {
-                            // Redirigir al home si ya completó el onboarding
-                            Navigator.pushReplacementNamed(context, '/home');
-                          }
-                        } else {
-                          // Documento no encontrado, manejar el error
-                          showSnackBar(context,
-                              'Error al validar el estado de la cuenta.');
-                        }
-                      } catch (e) {
-                        print('Error al consultar Firestore: $e');
-                        showSnackBar(context,
-                            'Error al consultar el estado del usuario.');
-                      }
-                      _emailController.clear();
-                      _passwordController.clear();
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  label: 'Contraseña',
+                  controller: _passwordController,
+                  obscureText: true,
                 ),
-                child: const Text('Iniciar sesión'),
-              ),
-              const SizedBox(height: 20),
-              const SizedBox(height: 30),
-              const Text('O inicia sesión con'),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Botón de Google
-                  IconButton(
-                    onPressed: () {
-                      // Lógica para autenticarse con Google
-                    },
-                    icon: const FaIcon(FontAwesomeIcons.google),
-                    iconSize: 40,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        // Lógica para recuperar la contraseña
+                      },
+                      child: const Text('¿Olvidaste tu contraseña?'),
+                    ),
+                    TextButton(
+                      onPressed: _showRegisterDialog,
+                      child: const Text('Registrar'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _handleLogin,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 50,
+                      vertical: 15,
+                    ),
                   ),
-                  const SizedBox(width: 20),
-                  // Botón de Facebook
-                  IconButton(
-                    onPressed: () {
-                      // Lógica para autenticarse con Facebook
-                    },
-                    icon: const Icon(Icons.facebook),
-                    iconSize: 40,
-                  ),
-                  const SizedBox(width: 20),
-                  // Botón de GitHub
-                  IconButton(
-                    onPressed: () {
-                      // Lógica para autenticarse con GitHub
-                    },
-                    icon: const FaIcon(FontAwesomeIcons.github),
-                    iconSize: 40,
-                  ),
-                ],
-              ),
-            ],
+                  child: const Text('Iniciar sesión'),
+                ),
+                const SizedBox(height: 20),
+                const Text('O inicia sesión con'),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        // Lógica para autenticarse con Google
+                      },
+                      icon: const FaIcon(FontAwesomeIcons.google),
+                      iconSize: 40,
+                    ),
+                    const SizedBox(width: 20),
+                    IconButton(
+                      onPressed: () {
+                        // Lógica para autenticarse con Facebook
+                      },
+                      icon: const Icon(Icons.facebook),
+                      iconSize: 40,
+                    ),
+                    const SizedBox(width: 20),
+                    IconButton(
+                      onPressed: () {
+                        // Lógica para autenticarse con GitHub
+                      },
+                      icon: const FaIcon(FontAwesomeIcons.github),
+                      iconSize: 40,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
