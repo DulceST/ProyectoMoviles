@@ -111,6 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // Validar el estado del onboarding del usuario
   Future<void> _validateOnboardingStatus(String email) async {
     try {
+      _showLoadingGif();
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('account')
           .doc(email)
@@ -169,15 +170,29 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+   void _showLoadingGif() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // El usuario no puede cerrar el GIF
+      builder: (context) {
+        return Center(
+          child: Image.network(
+            'https://media.giphy.com/media/L05HgB2h6qICDs5Sms/giphy.gif', // URL del GIF
+            height: 100,
+            width: 100,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // Verificar si el modo es landscape o portrait
           bool isLandscape = constraints.maxWidth > 600;
-
           return SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(20.0),

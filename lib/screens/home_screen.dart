@@ -46,10 +46,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Métodos para obtener las pantallas
   final List<Widget> _pages = [
-    const Center(
-        child: Text('Bienvenido a Home', style: TextStyle(fontSize: 20))),
-    RecyclingMapScreen(), // Widget para el mapa
     InformationScreen(), // Widget para la información
+    const RecyclingMapScreen(), // Widget para el mapa
     ActiveEventsScreen(), // Widget para eventos activos
   ];
 
@@ -164,9 +162,8 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: ConvexAppBar(
         backgroundColor: Colors.green, // Fondo verde en el ConvexAppBar
         items: const [
-          TabItem(icon: Icons.home, title: 'Home'),
-          TabItem(icon: Icons.map, title: 'Recycling Map'),
           TabItem(icon: Icons.info_rounded, title: 'Informacion'),
+          TabItem(icon: Icons.map, title: 'Recycling Map'),
           TabItem(icon: Icons.event, title: 'Eventos'),
         ],
         initialActiveIndex: 0,
