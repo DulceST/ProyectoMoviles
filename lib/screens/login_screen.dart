@@ -173,94 +173,140 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 100),
-                Image.asset(
-                  'assets/planta.png',
-                  height: 150, // Altura personalizada
-                  width: 150, // Ancho personalizado
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  label: 'Email',
-                  controller: _emailController,
-                ),
-                const SizedBox(height: 20),
-                _buildTextField(
-                  label: 'Contraseña',
-                  controller: _passwordController,
-                  obscureText: true,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        // Lógica para recuperar la contraseña
-                      },
-                      child: const Text('¿Olvidaste tu contraseña?'),
-                    ),
-                    TextButton(
-                      onPressed: _showRegisterDialog,
-                      child: const Text('Registrar'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _handleLogin,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 50,
-                      vertical: 15,
-                    ),
-                  ),
-                  child: const Text('Iniciar sesión'),
-                ),
-                const SizedBox(height: 20),
-                const Text('O inicia sesión con'),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        // Lógica para autenticarse con Google
-                      },
-                      icon: const FaIcon(FontAwesomeIcons.google),
-                      iconSize: 40,
-                    ),
-                    const SizedBox(width: 20),
-                    IconButton(
-                      onPressed: () {
-                        // Lógica para autenticarse con Facebook
-                      },
-                      icon: const Icon(Icons.facebook),
-                      iconSize: 40,
-                    ),
-                    const SizedBox(width: 20),
-                    IconButton(
-                      onPressed: () {
-                        // Lógica para autenticarse con GitHub
-                      },
-                      icon: const FaIcon(FontAwesomeIcons.github),
-                      iconSize: 40,
-                    ),
-                  ],
-                ),
-              ],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Verificar si el modo es landscape o portrait
+          bool isLandscape = constraints.maxWidth > 600;
+
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Form(
+                key: _formKey,
+                child: isLandscape
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Logo a la izquierda
+                          Expanded(
+                            flex: 1,
+                            child: Center(
+                              child: Image.asset(
+                                'assets/planta.png',
+                                height: 160,
+                                width: 160,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 20),
+                          // Formulario a la derecha
+                          Expanded(
+                            flex: 2,
+                            child: _buildFormContent(),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 100),
+                          Image.asset(
+                            'assets/planta.png',
+                            height: 150,
+                            width: 150,
+                          ),
+                          const SizedBox(height: 20),
+                          _buildFormContent(),
+                        ],
+                      ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+// Método para construir el contenido del formulario
+  Widget _buildFormContent() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildTextField(
+          label: 'Email',
+          controller: _emailController,
+        ),
+        const SizedBox(height: 20),
+        _buildTextField(
+          label: 'Contraseña',
+          controller: _passwordController,
+          obscureText: true,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton(
+              onPressed: () {
+                // Lógica para recuperar la contraseña
+              },
+              child: const Text('¿Olvidaste tu contraseña?',
+              style: TextStyle(color: Colors.green),),
+            ),
+            TextButton(
+              onPressed: _showRegisterDialog,
+              child: const Text('Registrar',
+              style: TextStyle(color: Colors.green),),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton(
+          onPressed: _handleLogin,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 50,
+              vertical: 15,
             ),
           ),
+          child: const Text('Iniciar sesión',
+          style: TextStyle(color: Colors.white),),
         ),
-      ),
+        const SizedBox(height: 20),
+        const Center(
+          child: Text('O inicia sesión con'),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: () {
+                // Lógica para autenticarse con Google
+              },
+              icon: const FaIcon(FontAwesomeIcons.google),
+              iconSize: 40,
+            ),
+            const SizedBox(width: 20),
+            IconButton(
+              onPressed: () {
+                // Lógica para autenticarse con Facebook
+              },
+              icon: const Icon(Icons.facebook),
+              iconSize: 40,
+            ),
+            const SizedBox(width: 20),
+            IconButton(
+              onPressed: () {
+                // Lógica para autenticarse con GitHub
+              },
+              icon: const FaIcon(FontAwesomeIcons.github),
+              iconSize: 40,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
