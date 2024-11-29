@@ -49,8 +49,6 @@ class _LoginpScreenState extends State<LoginpScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                // Si el usuario elige "Sí", enviamos el correo de verificación
-                emailAuth.sendVerificationEmail();
                 Navigator.of(context).pop(); // Cerrar el diálogo
               },
               child: const Text('Sí'),
@@ -58,7 +56,7 @@ class _LoginpScreenState extends State<LoginpScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context)
-                    .pop(); // Si elige "No", cerramos el diálogo
+                    .pop(); 
               },
               child: const Text('No'),
             ),
@@ -79,19 +77,6 @@ class _LoginpScreenState extends State<LoginpScreen> {
 
       if (userDoc.exists) {
         bool onboardingCompleted = userDoc.get('onboarding') ?? false;
-        bool isVerified = userDoc.get('isVerified') ?? false;
-
-        if (!isVerified) {
-          failedAttempts++;
-
-          if (failedAttempts > 2) {
-            _showVerificationDialog();
-            failedAttempts = 0;
-          } else {
-            _showSnackBar('Por favor verifica tu correo electrónico.');
-          }
-          return;
-        }
 
         // Navegar dependiendo del estado de onboarding
         Navigator.pushReplacementNamed(
@@ -258,25 +243,12 @@ class _LoginpScreenState extends State<LoginpScreen> {
                             int? result = await EmailAuth()
                                 .createAccount(email, password, context);
 
-                            // Manejo de los resultados
                             if (result == 0) {
-                              await emailAuth.sendVerificationEmail();
                               _showSnackBar(
                                   'Cuenta creada con exito. El correo de verificacion fue enviado',
-                                  backgroundColor: Colors.green, 
-                                  );
-                            } else if (result == 1) {
-                              _showSnackBar(
-                                  'La contraseña es demasiado débil. Intenta con una contraseña más fuerte.');
-                            } else if (result == 2) {
-                              _showSnackBar(
-                                  'Este correo ya está en uso. Intenta con otro correo.');
-                            } else if (result == 3) {
-                              _showSnackBar(
-                                  'El correo ingresado no es válido.');
+                                  backgroundColor: Colors.green);
                             } else {
-                              _showSnackBar(
-                                  'Hubo un error al crear la cuenta. Intenta de nuevo más tarde.');
+                              _showSnackBar('Hubo un error al crear la cuenta');
                             }
 
                             Navigator.pop(

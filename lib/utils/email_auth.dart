@@ -3,8 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
 
 class EmailAuth {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
   Future<int?> createAccount(
       String email, String password, BuildContext context) async {
     try {
@@ -63,72 +61,4 @@ class EmailAuth {
       return 5; // Error general
     }
   }
-
-  Future<int> signInEmailAndPassword(String email, String password) async {
-
-    try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
-
-      if (userCredential.user != null) {
-        return 0; // Éxito
-      }
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        print("Usuario no encontrado");
-        return 1; // Usuario no encontrado
-      } else if (e.code == 'wrong-password') {
-        print("Contraseña incorrecta");
-        return 2; // Contraseña incorrecta
-      } else if (e.code == 'invalid-email') {
-        print("Correo electrónico no válido");
-        return 3; // Correo no válido
-      } else {
-        print("Error desconocido: ${e.message}");
-        return 4; // Error desconocido
-      }
-    } catch (e) {
-      print("Error general: $e");
-      return 5; // Otro error
-    }
-    return 3; // Valor por defecto si no se captura ningún caso
-  }
-
-  Future<void> sendVerificationEmail() async {
-    User? user = FirebaseAuth.instance.currentUser;
-
-    try {
-      if (user != null && !user.emailVerified) {
-        await user.sendEmailVerification();
-        print('Correo de verificación enviado');
-      } else if (user?.emailVerified ?? false) {
-        print('Tu correo ya ha sido verificado.');
-      } else {
-        print('No se ha encontrado un usuario autenticado.');
-      }
-    } catch (e) {
-      print('Error al enviar el correo de verificación: $e');
-    }
-  }
-
-  Future<void> checkEmailVerification() async {
-  User? user = FirebaseAuth.instance.currentUser;
-
-  if (user != null) {
-    // Esperar a que el correo sea verificado
-    while (user!.emailVerified) {
-      await Future.delayed(const Duration(seconds: 1)); // Espera un segundo y verifica de nuevo
-      await user.reload(); // Recarga el estado del usuario
-      user = FirebaseAuth.instance.currentUser; // Obtiene el usuario actualizado
-    }
-
-    // Si el correo está verificado, actualizamos Firestore
-    await FirebaseFirestore.instance
-        .collection('account')
-        .doc(user.email)
-        .update({'isVerified': true});
-    
-    print('Correo verificado');
-  }
-}
 }
