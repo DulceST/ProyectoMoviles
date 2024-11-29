@@ -42,7 +42,8 @@ class MainApp extends StatelessWidget {
       builder: (context, themeProvider, child) {
         return MaterialApp(
           theme: ThemeData(
-            primaryColor: themeProvider.drawerColor, // Usar color del Provider
+            primaryColor: themeProvider.drawerColor,
+            fontFamily: themeProvider.fontFamily,
           ),
           debugShowCheckedModeBanner: false,
           home: const LoginScreen(), // Pantalla inicial

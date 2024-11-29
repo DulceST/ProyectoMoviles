@@ -14,11 +14,12 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    Color? selectedColor  = themeProvider.drawerColor;
+    Color? selectedColor = themeProvider.drawerColor;
+    String selectedFont = themeProvider.fontFamily;  // Obtenemos la fuente seleccionada
 
     return Scaffold(
       appBar: AppBar(
-         title: const Text('Personalizar tema', style: TextStyle(color: Colors.white)),
+        title: const Text('Personalizar tema', style: TextStyle(color: Colors.white)),
         backgroundColor: themeProvider.drawerColor,
       ),
       body: Column(
@@ -27,16 +28,16 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
             padding: EdgeInsets.all(16.0),
             child: Text(
               'Selecciona un color para personalizar el tema:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
           ),
           Expanded(
             child: GridView.count(
-              crossAxisCount: 4,
+              crossAxisCount: 5,
               padding: const EdgeInsets.all(16.0),
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
+              crossAxisSpacing: 5,
+              mainAxisSpacing: 5,
               children: [
                 Colors.red,
                 Colors.blue,
@@ -50,7 +51,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
               ].map((color) {
                 return GestureDetector(
                   onTap: () {
-                     themeProvider.setDrawerColor(color); 
+                    themeProvider.setDrawerColor(color); 
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -71,11 +72,48 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
               }).toList(),
             ),
           ),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Selecciona una fuente de letra:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          // Aquí agregamos la lista de fuentes disponibles para el usuario
+          Expanded(
+            child: ListView(
+              children: [
+                ListTile(
+                  title: const Text('Roboto'),
+                  onTap: () {
+                    themeProvider.setFontFamily('Roboto'); // Establecer fuente Roboto
+                  },
+                  selected: selectedFont == 'Roboto',
+                ),
+                ListTile(
+                  title: const Text('Arial'),
+                  onTap: () {
+                    themeProvider.setFontFamily('Arial'); // Establecer fuente Arial
+                  },
+                  selected: selectedFont == 'Arial',
+                ),
+                ListTile(
+                  title: const Text('Times New Roman'),
+                  onTap: () {
+                    themeProvider.setFontFamily('Times New Roman'); // Establecer fuente Times New Roman
+                  },
+                  selected: selectedFont == 'Times New Roman',
+                ),
+                // Puedes agregar más opciones de fuentes aquí.
+              ],
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () {
-                 ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text(
                       'El tema ha sido actualizado',
@@ -85,7 +123,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
                   ),
                 );
               },
-              child: const Text('Aplicar cambios',style: TextStyle(color: Colors.black)),
+              child: const Text('Aplicar cambios', style: TextStyle(color: Colors.black)),
             ),
           ),
         ],

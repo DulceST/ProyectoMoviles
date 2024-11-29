@@ -104,15 +104,34 @@ class _LoginScreenState extends State<LoginScreen> {
         _showSnackBar('Usuario o contraseña equivocados');
         _clearControllers();
       } else if (result == 0) {
-         DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('account').doc(email).get();
-         if(userDoc.exists && userDoc['isVerified'] == true){
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('account')
+            .doc(email)
+            .get();
+        if (userDoc.exists && userDoc['isVerified'] == true) {
           await _validateOnboardingStatus(email);
-         }else{
+        } else {
           _showSnackBar('Correo no verificado. Por favor verifica tu correo.');
           _clearControllers();
-         }
+        }
       }
     }
+  }
+
+  void _showLoadingGif() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // El usuario no puede cerrar el GIF
+      builder: (context) {
+        return Center(
+          child: Image.asset(
+            'assets/cargando.gif', // Ruta de la imagen en los assets
+            height: 100,
+            width: 100,
+          ),
+        );
+      },
+    );
   }
 
   // Validar el estado del onboarding del usuario
@@ -125,7 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
           .get();
 
       if (userDoc.exists) {
-        
         bool onboardingCompleted = userDoc.get('onboarding') ?? false;
         Navigator.pushReplacementNamed(
           context,
@@ -174,22 +192,6 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         }
         return null;
-      },
-    );
-  }
-
-  void _showLoadingGif() {
-    showDialog(
-      context: context,
-      barrierDismissible: false, // El usuario no puede cerrar el GIF
-      builder: (context) {
-        return Center(
-          child: Image.network(
-            'https://media.giphy.com/media/L05HgB2h6qICDs5Sms/giphy.gif', // URL del GIF
-            height: 100,
-            width: 100,
-          ),
-        );
       },
     );
   }
