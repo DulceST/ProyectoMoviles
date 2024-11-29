@@ -8,7 +8,7 @@ import 'package:proyecto_moviles/screens/add_location_screen.dart';
 import 'package:proyecto_moviles/screens/customize_screen.dart';
 import 'package:proyecto_moviles/screens/home_screen.dart';
 import 'package:proyecto_moviles/screens/information_screen.dart';
-import 'package:proyecto_moviles/screens/login_screen.dart';
+import 'package:proyecto_moviles/screens/loginp_screen.dart';
 import 'package:proyecto_moviles/screens/onboarding_screen.dart';
 import 'package:proyecto_moviles/screens/profile_screen.dart';
 import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
@@ -18,6 +18,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 void main() async{
   WidgetsFlutterBinding.ensureInitialized(); // Asegura que la app esté completamente inicializada
   await Firebase.initializeApp(); // Inicializa Firebase
+
 
     WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize( //inicializa supabase
@@ -56,12 +57,12 @@ class MainApp extends StatelessWidget {
             fontFamily: themeProvider.fontFamily,
           ),
           debugShowCheckedModeBanner: false,
-          home: const LoginScreen(), // Pantalla inicial
+          home: const LoginpScreen(), // Pantalla inicial
           routes: {
             "/home": (context) => const HomeScreen(),
             "/recycling_map": (context) => RecyclingMapScreen(),
             "/add_location": (context) => AddLocationScreen(),
-            "/login": (context) => const LoginScreen(),
+            "/login": (context) => const LoginpScreen(),
             "/register": (context) => const RegisterScreen(),
             "/profile": (context) => const ProfileScreen(),
             "/information": (context) => InformationScreen(),

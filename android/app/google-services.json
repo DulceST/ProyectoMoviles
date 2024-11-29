@@ -12,7 +12,20 @@
           "package_name": "com.example.proyecto_moviles"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "979154191903-50b97t4e32fbmc0cknd3ovj4c9eteooj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.proyecto_moviles.app",
+            "certificate_hash": "70075087a49274c674186d24801d759198455c2d"
+          }
+        },
+        {
+          "client_id": "979154191903-igf83o6r9kdv2f13u0d1qu616vca1haj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAqAFfgldsAsCrrIUkM9WF5CZAk8pvMpLA"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "979154191903-igf83o6r9kdv2f13u0d1qu616vca1haj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "979154191903-1ak89qflamr29kt4qucan7ba402vhos5.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.proyectoMoviles"
+              }
+            }
+          ]
         }
       }
     }
