@@ -44,7 +44,6 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
       'Suscripciones', // Nombre del canal
       importance: Importance.high,
       priority: Priority.high,
-      showWhen: false,
     );
 
     const NotificationDetails platformChannelSpecifics =
@@ -91,7 +90,7 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Agregar el ID del evento al estado local para mostrar "Suscrito"
+      // Actualizar estado local
       setState(() {
         subscribedEvents.add(eventId);
       });
@@ -102,7 +101,7 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
         'Te has suscrito al evento: $eventName',
       );
 
-      // Suscribirse al tema del evento para futuras notificaciones
+      // Suscribirse al tema del evento en FCM
       await messaging.subscribeToTopic(eventId);
 
       // Mostrar mensaje de confirmación
@@ -113,6 +112,48 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
       print('Error al suscribirse: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Hubo un error al suscribirse.')),
+      );
+    }
+  }
+
+  /// Método para cancelar suscripción a un evento
+  Future<void> unsubscribeFromEvent(String eventId, String eventName) async {
+    if (currentUser == null) return;
+
+    try {
+      // Eliminar la suscripción del usuario en Firestore
+      final userSubscriptions = await FirebaseFirestore.instance
+          .collection('subscriptions')
+          .where('user_id', isEqualTo: currentUser!.uid)
+          .where('event_id', isEqualTo: eventId)
+          .get();
+
+      for (final doc in userSubscriptions.docs) {
+        await doc.reference.delete();
+      }
+
+      // Actualizar estado local
+      setState(() {
+        subscribedEvents.remove(eventId);
+      });
+
+      // Mostrar notificación local
+      await _showLocalNotification(
+        '¡Suscripción cancelada!',
+        'Has cancelado tu suscripción al evento: $eventName',
+      );
+
+      // Cancelar la suscripción al tema del evento en FCM
+      await messaging.unsubscribeFromTopic(eventId);
+
+      // Mostrar mensaje de confirmación
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Has cancelado tu suscripción al evento "$eventName".')),
+      );
+    } catch (e) {
+      print('Error al cancelar suscripción: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Hubo un error al cancelar la suscripción.')),
       );
     }
   }
@@ -166,9 +207,12 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
                     'Del ${startDate.toLocal().toString().split(' ')[0]} al ${endDate.toLocal().toString().split(' ')[0]}\n${event['description']}',
                   ),
                   trailing: isSubscribed
-                      ? const Text(
-                          'Suscrito',
-                          style: TextStyle(color: Colors.green),
+                      ? ElevatedButton(
+                          onPressed: () => unsubscribeFromEvent(eventId, eventName),
+                          child: const Text('Cancelar'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                          ),
                         )
                       : ElevatedButton(
                           onPressed: () => subscribeToEvent(eventId, eventName),
