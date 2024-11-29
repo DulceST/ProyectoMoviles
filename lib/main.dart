@@ -49,7 +49,7 @@ class MainApp extends StatelessWidget {
           home: const LoginScreen(), // Pantalla inicial
           routes: {
             "/home": (context) => const HomeScreen(),
-            "/recycling_map": (context) => const RecyclingMapScreen(),
+            "/recycling_map": (context) => RecyclingMapScreen(),
             "/add_location": (context) => AddLocationScreen(),
             "/login": (context) => const LoginScreen(),
             "/register": (context) => const RegisterScreen(),

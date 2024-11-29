@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:geocoding/geocoding.dart'; // Importa el paquete de geocodificación
@@ -24,6 +25,81 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
     target: LatLng(-34.6037, -58.3816), // Cambia a la posición inicial deseada
     zoom: 12,
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+    _loadMarkers();
+  }
+
+  // Método para obtener la ubicación actual del usuario
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('El servicio de ubicación está deshabilitado. Habilítalo para continuar.')),
+      );
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Los permisos de ubicación fueron denegados.')),
+        );
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Los permisos de ubicación están permanentemente denegados.')),
+      );
+      return;
+    }
+
+    final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    final GoogleMapController controller = await _mapController.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 15),
+    ));
+    setState(() {
+      _selectedLocation = LatLng(position.latitude, position.longitude);
+      _markers.add(
+        Marker(
+          markerId: MarkerId("current-location"),
+          position: _selectedLocation!,
+        ),
+      );
+      _getAddressFromLatLng(_selectedLocation!);
+    });
+  }
+
+  // Método para obtener los marcadores desde la base de datos
+  Future<void> _loadMarkers() async {
+    final databaseLocation = DatabaseLocation();
+    final locations = await databaseLocation.getRecyclingLocations();
+    setState(() {
+      for (var location in locations) {
+        _markers.add(
+          Marker(
+            markerId: MarkerId(location.id),
+            position: LatLng(location.latitude, location.longitude),
+            infoWindow: InfoWindow(
+              title: location.name,
+              snippet: location.address,
+            ),
+          ),
+        );
+      }
+    });
+  }
 
   // Método para obtener la dirección usando geocodificación inversa
   Future<void> _getAddressFromLatLng(LatLng position) async {
@@ -69,7 +145,9 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
       name: _nameController.text,
       address: _addressController.text,
       latitude: _selectedLocation!.latitude,
-      longitude: _selectedLocation!.longitude, id: '', acceptedMaterials: [],
+      longitude: _selectedLocation!.longitude,
+      id: '',
+      acceptedMaterials: [],
     );
 
     try {
@@ -82,13 +160,8 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
         SnackBar(content: Text('Ubicación guardada exitosamente')),
       );
 
-      // Clear the fields after saving
-      _nameController.clear();
-      _addressController.clear();
-      setState(() {
-        _selectedLocation = null;
-        _markers.clear();
-      });
+      // Regresa a la pantalla anterior después de guardar
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al guardar la ubicación: $e')),
