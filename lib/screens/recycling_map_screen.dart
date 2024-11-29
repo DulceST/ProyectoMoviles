@@ -1,34 +1,126 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyecto_moviles/models/recycling_location.dart';
 
 class RecyclingMapScreen extends StatefulWidget {
-  const RecyclingMapScreen({super.key});
-
   @override
   _RecyclingMapScreenState createState() => _RecyclingMapScreenState();
 }
 
 class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
   late GoogleMapController mapController;
-  Set<Marker> markers = {};
+  Set<Marker> recyclingMarkers = {};  // Marcadores de reciclaje
+  Set<Marker> eventMarkers = {};      // Marcadores de eventos
+
   bool showMap = true; // Variable para alternar entre mapa y lista
   late BitmapDescriptor eventIcon;
+  LatLng? currentLocation;
 
-  @override
-  void initState() {
-    super.initState();
-    loadCustomIcons();
-    fetchRecyclingLocations();
-    fetchActiveEvents();
-  }
+@override
+void initState() {
+  super.initState();
+  loadCustomIcons();
+  setupFirestoreListeners();
+  determinePosition();
+}
+
+void setupFirestoreListeners() {
+  // Listener para puntos de reciclaje
+  FirebaseFirestore.instance.collection('recycling_locations').snapshots().listen((snapshot) {
+    Set<Marker> newRecyclingMarkers = {};
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final recyclingLocation = RecyclingLocation.fromMap(data);
+
+      newRecyclingMarkers.add(
+        Marker(
+          markerId: MarkerId(recyclingLocation.id),
+          position: LatLng(recyclingLocation.latitude, recyclingLocation.longitude),
+          infoWindow: InfoWindow(
+            title: recyclingLocation.name,
+            snippet: recyclingLocation.address,
+            onTap: () => showCreatorInfo(recyclingLocation.id),
+          ),
+        ),
+      );
+    }
+    setState(() {
+      recyclingMarkers = newRecyclingMarkers;
+    });
+  });
+
+  // Listener para eventos de reciclaje
+  FirebaseFirestore.instance.collection('recycling_events').snapshots().listen((snapshot) {
+    final now = DateTime.now();
+    Set<Marker> newEventMarkers = {};
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final startDate = (data['start_date'] as Timestamp).toDate();
+      final durationDays = data['duration_days'] ?? 0;
+      final endDate = startDate.add(Duration(days: durationDays));
+
+      if (now.isAfter(startDate) && now.isBefore(endDate)) {
+        newEventMarkers.add(
+          Marker(
+            markerId: MarkerId(doc.id),
+            position: LatLng(data['location']['latitude'], data['location']['longitude']),
+            infoWindow: InfoWindow(
+              title: data['name'],
+              snippet: 'Evento Activo\n${data['description']}',
+              onTap: () => showEventDetails(doc.id, data),
+            ),
+            icon: eventIcon,
+          ),
+        );
+      }
+    }
+    setState(() {
+      eventMarkers = newEventMarkers;
+    });
+  });
+}
+
+
 
   Future<void> loadCustomIcons() async {
     eventIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(20, 20)),
+      ImageConfiguration(size: Size(20, 20)),
       'assets/green_pin.png', // Ruta del ícono personalizado
     );
+  }
+
+  Future<void> determinePosition() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Verifica si el servicio de ubicación está habilitado
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // No se puede continuar sin el servicio habilitado
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permiso denegado, no se puede continuar
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permiso denegado permanentemente
+      return;
+    }
+
+    // Obtiene la posición actual
+    Position position = await Geolocator.getCurrentPosition();
+    setState(() {
+      currentLocation = LatLng(position.latitude, position.longitude);
+    });
   }
 
   Future<void> fetchRecyclingLocations() async {
@@ -37,7 +129,7 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
         final data = doc.data();
         final recyclingLocation = RecyclingLocation.fromMap(data);
 
-        markers.add(
+        recyclingMarkers.add(
           Marker(
             markerId: MarkerId(recyclingLocation.id),
             position: LatLng(recyclingLocation.latitude, recyclingLocation.longitude),
@@ -64,7 +156,7 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
         final endDate = startDate.add(Duration(days: durationDays));
 
         if (now.isAfter(startDate) && now.isBefore(endDate)) {
-          markers.add(
+          eventMarkers.add(
             Marker(
               markerId: MarkerId(doc.id),
               position: LatLng(data['location']['latitude'], data['location']['longitude']),
@@ -89,12 +181,12 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Detalles del punto'),
+        title: Text('Detalles del punto'),
         content: Text('Creado por: $creator\nDirección: ${doc.data()?['address']}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
+            child: Text('Cerrar'),
           ),
         ],
       ),
@@ -114,7 +206,7 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
+            child: Text('Cerrar'),
           ),
         ],
       ),
@@ -123,9 +215,12 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Combina ambos conjuntos de marcadores
+    final combinedMarkers = {...recyclingMarkers, ...eventMarkers};
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Puntos de Reciclaje'),
+        title: Text('Puntos de Reciclaje'),
         actions: [
           IconButton(
             icon: Icon(showMap ? Icons.list : Icons.map),
@@ -137,33 +232,35 @@ class _RecyclingMapScreenState extends State<RecyclingMapScreen> {
           ),
         ],
       ),
-      body: showMap
-          ? GoogleMap(
-              onMapCreated: (controller) => mapController = controller,
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(19.432608, -99.133209), // Ubicación inicial
-                zoom: 12,
-              ),
-              markers: markers,
-            )
-          : ListView(
-              children: markers.map((marker) {
-                return ListTile(
-                  title: Text(marker.infoWindow.title ?? ''),
-                  subtitle: Text(marker.infoWindow.snippet ?? ''),
-                  onTap: () => marker.infoWindow.onTap?.call(),
-                );
-              }).toList(),
-            ),
+      body: currentLocation == null
+          ? Center(child: CircularProgressIndicator())
+          : (showMap
+              ? GoogleMap(
+                  key: ValueKey(combinedMarkers.hashCode), // Usa el hashCode combinado de los marcadores
+                  onMapCreated: (controller) => mapController = controller,
+                  initialCameraPosition: CameraPosition(
+                    target: currentLocation!,
+                    zoom: 12,
+                  ),
+                  markers: combinedMarkers, // Usa los marcadores combinados
+                )
+              : ListView(
+                  children: combinedMarkers.map((marker) {
+                    return ListTile(
+                      title: Text(marker.infoWindow.title ?? ''),
+                      subtitle: Text(marker.infoWindow.snippet ?? ''),
+                      onTap: () => marker.infoWindow.onTap?.call(),
+                    );
+                  }).toList(),
+                )),
       floatingActionButton: Align(
         alignment: Alignment.bottomLeft,
         child: FloatingActionButton(
-          heroTag: null, // Desactiva el Hero implícito
           onPressed: () {
             Navigator.pushNamed(context, "/add_location");
           },
-          tooltip: 'Agregar Ubicación',
-          child: const Icon(Icons.add_location),
+          tooltip: 'Add Location',
+          child: Icon(Icons.add_location),
         ),
       ),
     );

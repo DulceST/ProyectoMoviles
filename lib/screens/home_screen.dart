@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Métodos para obtener las pantallas
   final List<Widget> _pages = [
     InformationScreen(), // Widget para la información
-    const RecyclingMapScreen(), // Widget para el mapa
+    RecyclingMapScreen(), // Widget para el mapa
     ActiveEventsScreen(), // Widget para eventos activos
   ];
 
@@ -139,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.color_lens, color: Colors.black), // Ícono verde
+              leading: const Icon(Icons.event, color: Colors.black), // Ícono verde
               title: const Text('Agregar un evento',
                   style: TextStyle(color: Colors.black)), // Texto verde
               onTap: () {
