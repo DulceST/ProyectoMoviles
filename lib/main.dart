@@ -34,6 +34,7 @@ void main() async{
 
   final themeProvider = ThemeProvider();
   await themeProvider.loadDrawerColor(); // Cargar color guardado
+  await themeProvider.loadFontFamily();
 
   
   runApp(ChangeNotifierProvider(
