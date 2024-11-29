@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:proyecto_moviles/providers/theme_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -17,12 +19,28 @@ class ProfileScreen extends StatelessWidget {
     return FirebaseFirestore.instance.collection('users').doc(uid).get();
   }
 
+  Color darkenColor(Color color, [double amount = 0.1]) {
+    final hsl = HSLColor.fromColor(color);
+    final darkerHsl =
+        hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return darkerHsl.toColor();
+  }
+
+  Color lightenColor(Color color, [double amount = 0.1]) {
+    final hsl = HSLColor.fromColor(color);
+    final lighterHsl =
+        hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
+    return lighterHsl.toColor();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil'),
-        backgroundColor: Colors.green.shade700,
+        title: const Text('Perfil', style: TextStyle(color: Colors.white)),
+        backgroundColor: themeProvider.drawerColor,
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: _getUserData(),
@@ -36,7 +54,8 @@ class ProfileScreen extends StatelessWidget {
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text('No se encontraron datos del usuario.'));
+            return const Center(
+                child: Text('No se encontraron datos del usuario.'));
           }
 
           var userData = snapshot.data!.data() as Map<String, dynamic>;
@@ -53,7 +72,10 @@ class ProfileScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.green.shade50, Colors.green.shade200],
+                colors: [
+                  lightenColor(themeProvider.drawerColor, 0.4),
+                  lightenColor(themeProvider.drawerColor, 0.6),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -65,19 +87,21 @@ class ProfileScreen extends StatelessWidget {
                 CircleAvatar(
                   radius: 70,
                   backgroundImage: NetworkImage(profileImage),
-                  backgroundColor: Colors.green.shade100,
+                  backgroundColor: lightenColor(themeProvider.drawerColor, 0.4),
                 ),
                 const SizedBox(height: 20),
                 // Nombre del usuario
                 Text(
                   userName,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.green.shade900,
+                        color: darkenColor(themeProvider.drawerColor, 0.4),
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 const SizedBox(height: 20),
-                Divider(color: Colors.green.shade700, thickness: 1),
+                Divider(
+                    color: darkenColor(themeProvider.drawerColor, 0.2),
+                    thickness: 1),
                 const SizedBox(height: 20),
                 // Tarjeta de información
                 Expanded(
@@ -85,8 +109,10 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       _buildInfoCard('Teléfono', phone, Icons.phone, context),
                       _buildInfoCard('País', country, Icons.flag, context),
-                      _buildInfoCard('Estado', state, Icons.location_city, context),
-                      _buildInfoCard('Ciudad', city, Icons.location_on, context),
+                      _buildInfoCard(
+                          'Estado', state, Icons.location_city, context),
+                      _buildInfoCard(
+                          'Ciudad', city, Icons.location_on, context),
                     ],
                   ),
                 ),
@@ -98,7 +124,9 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon, BuildContext context) {
+  Widget _buildInfoCard(
+      String title, String value, IconData icon, BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
       elevation: 5,
@@ -110,8 +138,11 @@ class ProfileScreen extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: Colors.green.shade100,
-              child: Icon(icon, color: Colors.green.shade700),
+              backgroundColor: lightenColor(themeProvider.drawerColor, 0.4),
+              child: Icon(
+                icon,
+                color: darkenColor(themeProvider.drawerColor, 0.2),
+              ),
             ),
             const SizedBox(width: 20),
             Expanded(
@@ -122,14 +153,14 @@ class ProfileScreen extends StatelessWidget {
                     title,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.green.shade800,
+                          color: darkenColor(themeProvider.drawerColor, 0.3),
                         ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     value,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.green.shade600,
+                          color: darkenColor(themeProvider.drawerColor, 0.1),
                         ),
                   ),
                 ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:proyecto_moviles/providers/theme_provider.dart';
 import 'package:proyecto_moviles/screens/location_picker.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -82,9 +84,11 @@ class _AddEventScreenState extends State<AddEventScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Eventos de Reciclaje'),
+        title: const Text('Registro de eventos', style: TextStyle(color: Colors.white)),
+        backgroundColor: themeProvider.drawerColor,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

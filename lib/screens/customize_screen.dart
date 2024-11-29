@@ -2,20 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proyecto_moviles/providers/theme_provider.dart';
 
-class CustomizeScreen extends StatelessWidget {
+class CustomizeScreen extends StatefulWidget {
   const CustomizeScreen({super.key});
 
   @override
+  State<CustomizeScreen> createState() => _CustomizeScreenState();
+}
+
+class _CustomizeScreenState extends State<CustomizeScreen> {
+
+  @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    Color? selectedColor; // Para guardar temporalmente el color seleccionado
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
+    Color? selectedColor  = themeProvider.drawerColor;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Personalizar colores y letras'),
+         title: const Text('Personalizar tema', style: TextStyle(color: Colors.white)),
+        backgroundColor: themeProvider.drawerColor,
       ),
       body: Column(
         children: [
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              'Selecciona un color para personalizar el tema:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
           Expanded(
             child: GridView.count(
               crossAxisCount: 4,
@@ -35,10 +50,16 @@ class CustomizeScreen extends StatelessWidget {
               ].map((color) {
                 return GestureDetector(
                   onTap: () {
-                    selectedColor = color; // Guardar el color seleccionado
+                     themeProvider.setDrawerColor(color); 
                   },
                   child: Container(
-                    color: color,
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(8),
+                      border: selectedColor == color
+                          ? Border.all(color: Colors.black, width: 3)
+                          : null,
+                    ),
                     child: selectedColor == color
                         ? const Icon(
                             Icons.check,
@@ -54,24 +75,17 @@ class CustomizeScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: () {
-                if (selectedColor != null) {
-                  themeProvider.setDrawerColor(selectedColor!); // Aplicar el color
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('El color de la aplicacion ha sido actualizado'),
-                      duration: Duration(seconds: 2),
+                 ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'El tema ha sido actualizado',
+                      style: TextStyle(fontSize: 16),
                     ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Por favor selecciona un color primero'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
+                    duration: Duration(seconds: 2),
+                  ),
+                );
               },
-              child: const Text('Aplicar cambios'),
+              child: const Text('Aplicar cambios',style: TextStyle(color: Colors.black)),
             ),
           ),
         ],
