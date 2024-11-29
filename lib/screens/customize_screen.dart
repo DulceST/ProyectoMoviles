@@ -73,7 +73,7 @@ class _CustomizeScreenState extends State<CustomizeScreen> {
             ),
           ),
           const Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(5.0),
             child: Text(
               'Selecciona una fuente de letra:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
