@@ -55,8 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final drawerColor = Provider.of<ThemeProvider>(context).drawerColor;
-    // Mapear proveedor de autenticación a logotipos
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     Map<String, String> providerLogos = {
       'google.com': 'assets/google.png',
       'facebook.com': 'assets/facebook.png',
@@ -68,8 +68,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green, // Fondo verde en la AppBar
-        title: const Text('Reciclaje'),
+        backgroundColor: themeProvider.drawerColor, // Fondo verde en la AppBar
+        title: const Text('VidaVerde',
+        style: TextStyle(color: Colors.white)),
       ),
       drawer: Drawer(
         child: ListView(
@@ -77,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: <Widget>[
             DrawerHeader(
               decoration: BoxDecoration(
-                color: drawerColor, // Fondo verde oscuro en el DrawerHeader
+                color: themeProvider.drawerColor // Fondo verde oscuro en el DrawerHeader
               ),
               child: Row(
                 children: [
@@ -122,33 +123,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               leading:
-                  const Icon(Icons.account_circle, color: Colors.green), // Ícono verde
+                  const Icon(Icons.account_circle, color: Colors.black), // Ícono verde
               title: const Text('Perfil',
-                  style: TextStyle(color: Colors.green)), // Texto verde
+                  style: TextStyle(color: Colors.black)), // Texto verde
               onTap: () {
                 Navigator.pushNamed(context, '/profile');
               },
             ),
             ListTile(
-              leading: const Icon(Icons.color_lens, color: Colors.green), // Ícono verde
+              leading: const Icon(Icons.color_lens, color: Colors.black), // Ícono verde
               title: const Text('Cambiar colores y letras',
-                  style: TextStyle(color: Colors.green)), // Texto verde
+                  style: TextStyle(color:Colors.black)), // Texto verde
               onTap: () {
-                Navigator.pushNamed(context, '/changeColors'); // Navegar a la pantalla de cambiar colores
+                Navigator.pushNamed(context, '/color'); // Navegar a la pantalla de cambiar colores
               },
             ),
             ListTile(
-              leading: const Icon(Icons.color_lens, color: Colors.green), // Ícono verde
+              leading: const Icon(Icons.color_lens, color: Colors.black), // Ícono verde
               title: const Text('Agregar un evento',
-                  style: TextStyle(color: Colors.green)), // Texto verde
+                  style: TextStyle(color: Colors.black)), // Texto verde
               onTap: () {
                 Navigator.pushNamed(context, '/add_event'); // Navegar a la pantalla de cambiar colores
               },
             ),
             ListTile(
-              leading: const Icon(Icons.exit_to_app, color: Colors.green), // Ícono verde
+              leading: const Icon(Icons.exit_to_app, color: Colors.black), // Ícono verde
               title: const Text('Cerrar sesión',
-                  style: TextStyle(color: Colors.green)), // Texto verde
+                  style: TextStyle(color: Colors.black)), // Texto verde
               onTap: () async {
                 // Cerrar sesión en Firebase
                 await FirebaseAuth.instance.signOut();
@@ -162,20 +163,24 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex, // Muestra la pantalla correspondiente al índice
         children: _pages,
       ),
-      bottomNavigationBar: ConvexAppBar(
-        backgroundColor: Colors.green, // Fondo verde en el ConvexAppBar
-        items: const [
-          TabItem(icon: Icons.info_rounded, title: 'Informacion'),
-          TabItem(icon: Icons.map, title: 'Recycling Map'),
-          TabItem(icon: Icons.event, title: 'Eventos'),
-        ],
-        initialActiveIndex: 0,
-        onTap: (int index) {
-          setState(() {
-            _currentIndex = index; // Cambia la pantalla al índice seleccionado
-          });
-        },
-      ),
+      bottomNavigationBar: Consumer<ThemeProvider>(
+  builder: (context, themeProvider, child) {
+    return ConvexAppBar(
+      backgroundColor: themeProvider.drawerColor,
+      items: const [
+        TabItem(icon: Icons.info_rounded, title: 'Informacion'),
+        TabItem(icon: Icons.map, title: 'Recycling Map'),
+        TabItem(icon: Icons.event, title: 'Eventos'),
+      ],
+      initialActiveIndex: 0,
+      onTap: (int index) {
+        setState(() {
+          _currentIndex = index; // Cambia la pantalla al índice seleccionado
+        });
+      },
+    );
+  },
+),
     );
   }
 }

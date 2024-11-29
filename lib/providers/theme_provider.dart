@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  Color _drawerColor = Colors.green[700]!; // Color por defecto
+  Color _drawerColor = const Color(0xFF388E3C); // Color por defecto
 
   Color get drawerColor => _drawerColor;
 

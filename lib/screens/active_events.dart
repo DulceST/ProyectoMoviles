@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ActiveEventsScreen extends StatelessWidget {
+  const ActiveEventsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Eventos Activos'),
-      ),
+      
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('recycling_events')
@@ -15,11 +15,11 @@ class ActiveEventsScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('No hay eventos disponibles'));
+            return const Center(child: Text('No hay eventos disponibles'));
           }
 
           final now = DateTime.now();
@@ -32,7 +32,7 @@ class ActiveEventsScreen extends StatelessWidget {
           }).toList();
 
           if (activeEvents.isEmpty) {
-            return Center(child: Text('No hay eventos activos actualmente'));
+            return const Center(child: Text('No hay eventos activos actualmente'));
           }
 
           return ListView.builder(
@@ -44,13 +44,13 @@ class ActiveEventsScreen extends StatelessWidget {
               final endDate = startDate.add(Duration(days: durationDays));
 
               return Card(
-                margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: ListTile(
                   title: Text(event['name']),
                   subtitle: Text(
                     'Del ${startDate.toLocal().toString().split(' ')[0]} al ${endDate.toLocal().toString().split(' ')[0]}\n${event['description']}',
                   ),
-                  trailing: Icon(Icons.event_available),
+                  trailing: const Icon(Icons.event_available),
                 ),
               );
             },
