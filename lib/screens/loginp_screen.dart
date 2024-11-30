@@ -17,7 +17,6 @@ class _LoginpScreenState extends State<LoginpScreen> {
   bool isLoading = false;
   bool _obscurePassword = true;
   int failedAttempts = 0;
-  final EmailAuth _emailAuth = EmailAuth();
 
   @override
   void dispose() {
@@ -66,20 +65,34 @@ class _LoginpScreenState extends State<LoginpScreen> {
     );
   }
 
-  // Método para verificar si el correo está validado
-  Future<void> _checkEmailVerification() async {
-    bool isVerified = await _emailAuth.isEmailVerified(); // Llamar al método
-    if (isVerified) {
-      // El correo está validado
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("El correo ha sido verificado")),
-      );
-      // Redirigir al usuario o realizar alguna acción
+  // Método para reenviar el correo de verificación
+  Future<void> _resendVerificationEmail() async {
+    // Obtener el usuario actual
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null && !user.emailVerified) {
+      try {
+        // Actualizar el estado del usuario antes de enviar el correo
+        await user.reload();
+        user = FirebaseAuth.instance.currentUser;
+
+        // Reenviar el correo de verificación
+        await user?.sendEmailVerification();
+        _showSnackBar(
+            'Correo de verificación enviado. Revisa tu bandeja de entrada.');
+      } catch (e) {
+        // Manejar errores específicos
+        if (e.toString().contains("TOO_MANY_REQUESTS")) {
+          _showSnackBar(
+              'Has intentado reenviar el correo demasiadas veces. Intenta nuevamente más tarde.');
+        } else {      
+          _showSnackBar(
+              'Has intentado reenviar el correo demasiadas veces. Intenta nuevamente más tarde.');
+        }
+      }
     } else {
-      // El correo no está validado
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("El correo no ha sido verificado")),
-      );
+      _showSnackBar(
+          'Tu correo ya está verificado o no hay un usuario autenticado.');
     }
   }
 
@@ -260,12 +273,24 @@ class _LoginpScreenState extends State<LoginpScreen> {
                                 .createAccount(email, password, context);
 
                             if (result == 0) {
-                              await _emailAuth.sendVerificationEmail();
-                              _showSnackBar(
-                                  'Cuenta creada con exito. El correo de verificacion fue enviado',
-                                  backgroundColor: Colors.green);
-                            } else {
-                              _showSnackBar('Hubo un error al crear la cuenta');
+                              // Ingreso exitoso, verificar si el correo está validado
+                              User? user = FirebaseAuth.instance.currentUser;
+
+                              if (user != null) {
+                                // Actualizar el estado del usuario
+                                await user.reload();
+                                user = FirebaseAuth.instance.currentUser;
+
+                                if (user != null && user.emailVerified) {
+                                  // Si el correo está verificado, proceder con el inicio de sesión
+                                  await _validateOnboardingStatus(email);
+                                } else {
+                                  // Si el correo no está verificado
+                                  await _resendVerificationEmail();
+                                  _showSnackBar(
+                                      'Por favor verifica tu correo electrónico antes de iniciar sesión.');
+                                }
+                              }
                             }
 
                             Navigator.pop(
@@ -331,8 +356,7 @@ class _LoginpScreenState extends State<LoginpScreen> {
                       await _validateOnboardingStatus(email);
                     } else {
                       // Si el correo no está verificado, mostrar un mensaje y no permitir el inicio de sesión
-                      _showSnackBar(
-                          'Por favor verifica tu correo electrónico antes de iniciar sesión');
+                      await _resendVerificationEmail();
                     }
                   } else if (result == 4) {
                     _showSnackBar(
