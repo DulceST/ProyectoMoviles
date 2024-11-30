@@ -16,7 +16,8 @@ class _LoginpScreenState extends State<LoginpScreen> {
   bool isLoading = false;
   bool _obscurePassword = true;
   int failedAttempts = 0;
- EmailAuth emailAuth = EmailAuth();
+  final EmailAuth _emailAuth = EmailAuth();
+
 
   @override
   void dispose() {
@@ -244,6 +245,7 @@ class _LoginpScreenState extends State<LoginpScreen> {
                                 .createAccount(email, password, context);
 
                             if (result == 0) {
+                               await _emailAuth.sendVerificationEmail();
                               _showSnackBar(
                                   'Cuenta creada con exito. El correo de verificacion fue enviado',
                                   backgroundColor: Colors.green);

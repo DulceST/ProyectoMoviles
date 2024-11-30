@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/widgets.dart';
 
 class EmailAuth {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   Future<int?> createAccount(
       String email, String password, BuildContext context) async {
     try {
@@ -61,4 +63,21 @@ class EmailAuth {
       return 5; // Error general
     }
   }
+  // Método para enviar el correo de verificación
+  Future<void> sendVerificationEmail() async {
+    try {
+      User? user = _auth.currentUser;
+
+      if (user != null && !user.emailVerified) {
+        // Si el usuario está autenticado y el correo no ha sido verificado
+        await user.sendEmailVerification();
+        print("Correo de verificación enviado a ${user.email}");
+      } else {
+        print("El usuario ya ha verificado su correo o no está autenticado.");
+      }
+    } catch (e) {
+      print("Error al enviar el correo de verificación: $e");
+    }
+  }
 }
+
