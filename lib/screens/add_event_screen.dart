@@ -87,18 +87,23 @@ class _AddEventScreenState extends State<AddEventScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registro de eventos', style: TextStyle(color: Colors.white)),
+        title: const Text('Registro de Eventos', style: TextStyle(color: Colors.white)),
         backgroundColor: themeProvider.drawerColor,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: 'Nombre del Evento'),
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del Evento',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor ingresa el nombre del evento';
@@ -106,9 +111,13 @@ class _AddEventScreenState extends State<AddEventScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _daysController,
-                decoration: InputDecoration(labelText: 'Duración (días)'),
+                decoration: const InputDecoration(
+                  labelText: 'Duración (días)',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -120,9 +129,14 @@ class _AddEventScreenState extends State<AddEventScreen> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: InputDecoration(labelText: 'Descripción'),
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor ingresa una descripción';
@@ -130,28 +144,41 @@ class _AddEventScreenState extends State<AddEventScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 10),
-              ElevatedButton(
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
                 onPressed: _pickLocation,
-                child: Text(
+                icon: const Icon(Icons.location_on),
+                label: Text(
                   _selectedLocation == null
                       ? 'Seleccionar Ubicación'
                       : 'Ubicación Seleccionada',
                 ),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
               ),
-              SizedBox(height: 10),
-              ElevatedButton(
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
                 onPressed: _pickStartDate,
-                child: Text(
+                icon: const Icon(Icons.calendar_today),
+                label: Text(
                   _selectedStartDate == null
                       ? 'Seleccionar Fecha de Inicio'
                       : 'Fecha de Inicio: ${_selectedStartDate!.toLocal()}'.split(' ')[0],
                 ),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _addEvent,
-                child: Text('Agregar Evento'),
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _addEvent,
+                  child: const Text('Agregar Evento'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(150, 50),
+                  ),
+                ),
               ),
             ],
           ),

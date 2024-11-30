@@ -56,15 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
-    Map<String, String> providerLogos = {
-      'google.com': 'assets/google.png',
-      'facebook.com': 'assets/facebook.png',
-      'github.com': 'assets/github.png',
-      'password': 'assets/email.png',
-    };
-
-    String? providerLogo = providerLogos[providerId];
 
     return Scaffold(
       appBar: AppBar(
@@ -89,35 +80,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png'),
                   ),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Mostrar correo y logo del proveedor en una fila
-                        Row(
-                          children: [
-                            if (providerLogo != null)
-                              Image.asset(
-                                providerLogo,
-                                height: 20,
-                              ),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: Text(
-                                email,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),

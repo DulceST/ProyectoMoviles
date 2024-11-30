@@ -9,7 +9,7 @@ class InformationScreen extends StatelessWidget {
       'title': 'Botellas de plástico',
       'image': 'https://mseaicoorljglkygdkbv.supabase.co/storage/v1/object/public/proyectomoviles/botellas_plastico.png',
       'backgroundImage': 'https://mseaicoorljglkygdkbv.supabase.co/storage/v1/object/public/proyectomoviles/fondo_botellas.jpg',
-       'description': 'Las botellas de plástico pueden ser recicladas para crear nuevos envases y fibras textiles.'
+      'description': 'Las botellas de plástico pueden ser recicladas para crear nuevos envases y fibras textiles.'
     },
     {
       'title': 'Papel y cartón',
@@ -31,8 +31,6 @@ class InformationScreen extends StatelessWidget {
     },
   ];
 
-  
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,66 +40,74 @@ class InformationScreen extends StatelessWidget {
           itemBuilder: (BuildContext context, int index) {
             return Card(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
+                borderRadius: BorderRadius.circular(16.0),
               ),
-              elevation: 4,
+              elevation: 8,
               child: Stack(
                 children: [
                   // Imagen de fondo específica para cada carta
                   Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12.0),
+                      borderRadius: BorderRadius.circular(16.0),
                       image: DecorationImage(
-                        image: NetworkImage(recyclableItems[index]['backgroundImage']!), // Imagen de fondo
+                        image: NetworkImage(recyclableItems[index]['backgroundImage']!),
                         fit: BoxFit.cover,
-                        opacity: .5,
+                        opacity: 0.7,
                       ),
                     ),
                   ),
                   // Contenido encima de la imagen de fondo
                   Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Image.network(
-                        recyclableItems[index]['image']!,
-                        height: 350,
+                      Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: Image.network(
+                          recyclableItems[index]['image']!,
+                          height: 300,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: Text(
+                              recyclableItems[index]['title']!,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding: const EdgeInsets.all(12.0),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: Text(
+                              recyclableItems[index]['description']!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
-                      // Fondo semitransparente para el título
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6), // Fondo semitransparente
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          recyclableItems[index]['title']!,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white, // Contraste con el fondo
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Fondo semitransparente para la descripción
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6), // Fondo semitransparente
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          recyclableItems[index]['description']!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white, // Contraste con el fondo
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ],
@@ -110,8 +116,16 @@ class InformationScreen extends StatelessWidget {
           },
           itemCount: recyclableItems.length,
           autoplay: true,
-          pagination: const SwiperPagination(),
-          control: const SwiperControl(),
+          autoplayDelay: 5000,
+          pagination: const SwiperPagination(
+            builder: DotSwiperPaginationBuilder(
+              activeColor: Colors.white,
+              color: Colors.grey,
+            ),
+          ),
+          control: const SwiperControl(
+            color: Colors.white,
+          ),
         ),
       ),
     );

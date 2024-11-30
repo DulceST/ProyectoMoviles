@@ -26,7 +26,6 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
     _loadUserSubscriptions();
   }
 
-  /// Inicializar notificaciones locales
   Future<void> _initializeLocalNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -36,12 +35,11 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
     await localNotificationsPlugin.initialize(initializationSettings);
   }
 
-  /// Mostrar notificación local
   Future<void> _showLocalNotification(String title, String body) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'subscription_channel', // ID del canal
-      'Suscripciones', // Nombre del canal
+      'subscription_channel', 
+      'Suscripciones', 
       importance: Importance.high,
       priority: Priority.high,
     );
@@ -50,14 +48,13 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await localNotificationsPlugin.show(
-      0, // ID de la notificación
-      title, // Título
-      body, // Cuerpo
+      0, 
+      title, 
+      body, 
       platformChannelSpecifics,
     );
   }
 
-  /// Cargar las suscripciones del usuario actual
   Future<void> _loadUserSubscriptions() async {
     if (currentUser == null) return;
 
@@ -73,7 +70,6 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
     });
   }
 
-  /// Método para suscribirse a un evento
   Future<void> subscribeToEvent(String eventId, String eventName) async {
     if (currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -83,28 +79,23 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
     }
 
     try {
-      // Agregar la suscripción del usuario a la colección 'subscriptions'
       await FirebaseFirestore.instance.collection('subscriptions').add({
         'event_id': eventId,
         'user_id': currentUser!.uid,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Actualizar estado local
       setState(() {
         subscribedEvents.add(eventId);
       });
 
-      // Mostrar notificación local
       await _showLocalNotification(
         '¡Suscripción exitosa!',
         'Te has suscrito al evento: $eventName',
       );
 
-      // Suscribirse al tema del evento en FCM
       await messaging.subscribeToTopic(eventId);
 
-      // Mostrar mensaje de confirmación
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('¡Te has suscrito al evento "$eventName"!')),
       );
@@ -116,12 +107,10 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
     }
   }
 
-  /// Método para cancelar suscripción a un evento
   Future<void> unsubscribeFromEvent(String eventId, String eventName) async {
     if (currentUser == null) return;
 
     try {
-      // Eliminar la suscripción del usuario en Firestore
       final userSubscriptions = await FirebaseFirestore.instance
           .collection('subscriptions')
           .where('user_id', isEqualTo: currentUser!.uid)
@@ -132,21 +121,17 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
         await doc.reference.delete();
       }
 
-      // Actualizar estado local
       setState(() {
         subscribedEvents.remove(eventId);
       });
 
-      // Mostrar notificación local
       await _showLocalNotification(
         '¡Suscripción cancelada!',
         'Has cancelado tu suscripción al evento: $eventName',
       );
 
-      // Cancelar la suscripción al tema del evento en FCM
       await messaging.unsubscribeFromTopic(eventId);
 
-      // Mostrar mensaje de confirmación
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Has cancelado tu suscripción al evento "$eventName".')),
       );
@@ -201,22 +186,48 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
 
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
                 child: ListTile(
-                  title: Text(eventName),
+                  contentPadding: const EdgeInsets.all(16.0),
+                  title: Text(
+                    eventName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   subtitle: Text(
                     'Del ${startDate.toLocal().toString().split(' ')[0]} al ${endDate.toLocal().toString().split(' ')[0]}\n${event['description']}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
                   ),
                   trailing: isSubscribed
-                      ? ElevatedButton(
+                      ? ElevatedButton.icon(
                           onPressed: () => unsubscribeFromEvent(eventId, eventName),
-                          child: const Text('Cancelar'),
+                          icon: const Icon(Icons.cancel, color: Colors.white),
+                          label: const Text('Cancelar'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                            backgroundColor: const Color.fromARGB(255, 245, 164, 159),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         )
-                      : ElevatedButton(
+                      : ElevatedButton.icon(
                           onPressed: () => subscribeToEvent(eventId, eventName),
-                          child: const Text('Suscribirse'),
+                          icon: const Icon(Icons.check_circle, color: Colors.white),
+                          label: const Text('Suscribirse',style: TextStyle(color: Colors.black),),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color.fromARGB(255, 161, 225, 163),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                 ),
               );
