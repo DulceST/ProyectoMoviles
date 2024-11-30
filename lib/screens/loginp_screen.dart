@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:proyecto_moviles/utils/email_auth.dart';
@@ -17,7 +18,6 @@ class _LoginpScreenState extends State<LoginpScreen> {
   bool _obscurePassword = true;
   int failedAttempts = 0;
   final EmailAuth _emailAuth = EmailAuth();
-
 
   @override
   void dispose() {
@@ -56,8 +56,7 @@ class _LoginpScreenState extends State<LoginpScreen> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context)
-                    .pop(); 
+                Navigator.of(context).pop();
               },
               child: const Text('No'),
             ),
@@ -67,9 +66,25 @@ class _LoginpScreenState extends State<LoginpScreen> {
     );
   }
 
+  // Método para verificar si el correo está validado
+  Future<void> _checkEmailVerification() async {
+    bool isVerified = await _emailAuth.isEmailVerified(); // Llamar al método
+    if (isVerified) {
+      // El correo está validado
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("El correo ha sido verificado")),
+      );
+      // Redirigir al usuario o realizar alguna acción
+    } else {
+      // El correo no está validado
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("El correo no ha sido verificado")),
+      );
+    }
+  }
+
   // Función para validar el estado de onboarding
   Future<void> _validateOnboardingStatus(String email) async {
-
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('account')
@@ -245,7 +260,7 @@ class _LoginpScreenState extends State<LoginpScreen> {
                                 .createAccount(email, password, context);
 
                             if (result == 0) {
-                               await _emailAuth.sendVerificationEmail();
+                              await _emailAuth.sendVerificationEmail();
                               _showSnackBar(
                                   'Cuenta creada con exito. El correo de verificacion fue enviado',
                                   backgroundColor: Colors.green);
@@ -308,9 +323,17 @@ class _LoginpScreenState extends State<LoginpScreen> {
 
                   // Comprobamos el resultado de la autenticación
                   if (result == 0) {
-                    // Ingreso exitoso
+                    // Ingreso exitoso, verificar si el correo está validado
+                    User? user = FirebaseAuth.instance.currentUser;
 
-                    await _validateOnboardingStatus(email);
+                    if (user != null && user.emailVerified) {
+                      // Si el correo está verificado, proceder con el inicio de sesión
+                      await _validateOnboardingStatus(email);
+                    } else {
+                      // Si el correo no está verificado, mostrar un mensaje y no permitir el inicio de sesión
+                      _showSnackBar(
+                          'Por favor verifica tu correo electrónico antes de iniciar sesión');
+                    }
                   } else if (result == 4) {
                     _showSnackBar(
                         'Datos de usuario incorrectos, vuelve a intentarlo');

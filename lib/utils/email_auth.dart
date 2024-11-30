@@ -79,5 +79,18 @@ class EmailAuth {
       print("Error al enviar el correo de verificación: $e");
     }
   }
+
+  // Método para verificar si el correo está validado
+  Future<bool> isEmailVerified() async {
+    User? user = _auth.currentUser;
+
+    if (user != null) {
+      // Verificar si el correo está validado
+      return user.emailVerified;
+    } else {
+      print("No hay un usuario autenticado.");
+      return false;  // Si no hay un usuario autenticado, devuelve false
+    }
+  }
 }
 
