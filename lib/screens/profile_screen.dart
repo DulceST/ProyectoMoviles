@@ -19,18 +19,12 @@ class ProfileScreen extends StatelessWidget {
     return FirebaseFirestore.instance.collection('users').doc(uid).get();
   }
 
-  Color darkenColor(Color color, [double amount = 0.1]) {
-    final hsl = HSLColor.fromColor(color);
-    final darkerHsl =
-        hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
-    return darkerHsl.toColor();
-  }
-
-  Color lightenColor(Color color, [double amount = 0.1]) {
-    final hsl = HSLColor.fromColor(color);
-    final lighterHsl =
-        hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
-    return lighterHsl.toColor();
+  // Método para obtener el proveedor de autenticación
+  String _getAuthProviderName(User user) {
+    if (user.providerData.isNotEmpty) {
+      return user.providerData.first.providerId;
+    }
+    return '';
   }
 
   @override
@@ -59,6 +53,7 @@ class ProfileScreen extends StatelessWidget {
           }
 
           var userData = snapshot.data!.data() as Map<String, dynamic>;
+          var user = FirebaseAuth.instance.currentUser;
 
           String userName = userData['user'] ?? 'No disponible';
           String phone = userData['phone'] ?? 'No disponible';
@@ -67,6 +62,10 @@ class ProfileScreen extends StatelessWidget {
           String city = userData['city'] ?? 'No disponible';
           String profileImage = userData['profileImage'] ??
               'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png';
+
+          // Obtener el proveedor y la imagen correspondiente
+          String provider = _getAuthProviderName(user!);
+          String providerImage = _getProviderImage(provider);
 
           return Container(
             padding: const EdgeInsets.all(16.0),
@@ -99,6 +98,21 @@ class ProfileScreen extends StatelessWidget {
                       ),
                 ),
                 const SizedBox(height: 20),
+                // Mostrar proveedor de autenticación e imagen
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(providerImage, width: 30, height: 30),
+                    const SizedBox(width: 10),
+                    Text(
+                      user.email ?? 'No disponible',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: darkenColor(themeProvider.drawerColor, 0.3),
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
                 Divider(
                     color: darkenColor(themeProvider.drawerColor, 0.2),
                     thickness: 1),
@@ -122,6 +136,22 @@ class ProfileScreen extends StatelessWidget {
         },
       ),
     );
+  }
+
+  // Método para obtener la imagen según el proveedor
+  String _getProviderImage(String provider) {
+    switch (provider) {
+      case 'google.com':
+        return 'assets/google.png';
+      case 'facebook.com':
+        return 'assets/facebook.png';
+      case 'github.com':
+        return 'assets/github.png';
+      case 'password':
+        return 'assets/email.png';
+      default:
+        return 'assets/email.png'; // Imagen por defecto en caso de que no haya un proveedor reconocido
+    }
   }
 
   Widget _buildInfoCard(
@@ -170,5 +200,19 @@ class ProfileScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color darkenColor(Color color, [double amount = 0.1]) {
+    final hsl = HSLColor.fromColor(color);
+    final darkerHsl =
+        hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
+    return darkerHsl.toColor();
+  }
+
+  Color lightenColor(Color color, [double amount = 0.1]) {
+    final hsl = HSLColor.fromColor(color);
+    final lighterHsl =
+        hsl.withLightness((hsl.lightness + amount).clamp(0.0, 1.0));
+    return lighterHsl.toColor();
   }
 }
