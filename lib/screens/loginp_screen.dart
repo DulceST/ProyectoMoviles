@@ -85,7 +85,7 @@ class _LoginpScreenState extends State<LoginpScreen> {
         if (e.toString().contains("TOO_MANY_REQUESTS")) {
           _showSnackBar(
               'Has intentado reenviar el correo demasiadas veces. Intenta nuevamente más tarde.');
-        } else {      
+        } else {
           _showSnackBar(
               'Has intentado reenviar el correo demasiadas veces. Intenta nuevamente más tarde.');
         }
@@ -206,7 +206,30 @@ class _LoginpScreenState extends State<LoginpScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             TextButton(
-              onPressed: () {},
+              onPressed: () async {
+                String email = _emailController.text;
+
+                if (email.isEmpty) {
+                  _showSnackBar('El correo es obligatorio.');
+                  return;
+                }
+
+                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
+                  _showSnackBar('Por favor ingresa un correo válido.');
+                  return;
+                }
+
+                try {
+                  // Llamar al método para enviar el correo de recuperación
+                  await EmailAuth().sendPasswordResetEmail(email);
+                  _showSnackBar(
+                      'Correo de recuperación enviado. Revisa tu bandeja de entrada.',
+                      backgroundColor: Colors.green);
+                } catch (e) {
+                  _showSnackBar(
+                      'Hubo un error al enviar el correo. Inténtalo más tarde.');
+                }
+              },
               child: const Text(
                 '¿Olvidaste tu contraseña?',
                 style: TextStyle(color: Colors.green),
@@ -244,7 +267,6 @@ class _LoginpScreenState extends State<LoginpScreen> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            // Cerrar el diálogo
                             Navigator.pop(context);
                           },
                           child: const Text('Cancelar'),

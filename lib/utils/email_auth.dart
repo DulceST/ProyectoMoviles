@@ -92,5 +92,13 @@ class EmailAuth {
       return false;  // Si no hay un usuario autenticado, devuelve false
     }
   }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      throw e;
+    }
+  }
 }
 
