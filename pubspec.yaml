@@ -43,7 +43,15 @@ dependencies:
   card_swiper:
   flutter_polyline_points: 
 
-
+  #pagos
+  shelf:
+  url_launcher: 
+  flutter_stripe:
+  carousel_slider_plus:
+  http:
+  flutter_webview_plugin:
+  webview_flutter: ^4.10.0
+  mercadopago_sdk:
 
 dev_dependencies:
   flutter_test:

@@ -13,6 +13,7 @@ import 'package:proyecto_moviles/screens/onboarding_screen.dart';
 import 'package:proyecto_moviles/screens/profile_screen.dart';
 import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
 import 'package:proyecto_moviles/screens/register_screen.dart';
+import 'package:proyecto_moviles/screens/suscription_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async{
@@ -69,6 +70,7 @@ class MainApp extends StatelessWidget {
             "/onboarding": (context) => const OnboardingScreen(),
             "/add_event": (context) => AddEventScreen(),
             "/color": (context) => const CustomizeScreen(),
+            "/products": (context) => SubscriptionScreen(),
           },
         );
       },

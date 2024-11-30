@@ -109,6 +109,14 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.workspace_premium, color: Colors.black), // Ícono verde
+              title: const Text('Hazte premium',
+                  style: TextStyle(color:Colors.black)), // Texto verde
+              onTap: () {
+                Navigator.pushNamed(context, '/products'); // Navegar a la pantalla de cambiar colores
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.exit_to_app, color: Colors.black), // Ícono verde
               title: const Text('Cerrar sesión',
                   style: TextStyle(color: Colors.black)), // Texto verde
