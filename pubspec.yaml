@@ -34,6 +34,11 @@ dependencies:
   toastification:
   image_picker:
   provider: 
+
+  #storage
+  cloudinary_public:
+  dio:
+  
   #notificaciobes
   firebase_messaging:
   flutter_local_notifications:

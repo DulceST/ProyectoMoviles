@@ -1,7 +1,5 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:csc_picker/csc_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +7,8 @@ import 'package:lottie/lottie.dart';
 import 'package:proyecto_moviles/models/content_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+// ignore: depend_on_referenced_packages
+import 'package:path/path.dart' as path;
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -56,6 +56,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
+  Future<String?> _uploadImageToSupabase(XFile imageFile) async {
+    try {
+      final supabaseClient = Supabase.instance.client;
+      final storage = supabaseClient.storage.from('profile-images');
+
+      final fileName = path.basename(imageFile.path);
+      final filePath = 'profile-images/$fileName';
+      final file = File(imageFile.path);
+
+      final response = await storage.upload(filePath, file);
+
+      // Verificar si hubo un error en la carga
+      if (response.error != null) {
+        print('Error al subir la imagen: ${response.error?.message}');
+        return null;
+      }
+
+      // Si la carga fue exitosa, imprimir la respuesta
+      print('Archivo subido correctamente:');
+
+      // Obtener la URL pública
+      final imageUrl = storage.getPublicUrl(filePath);
+      print('URL de la imagen: $imageUrl');
+
+      return imageUrl;
+    } catch (e) {
+      print('Error al subir la imagen: $e');
+      return null;
+    }
+  }
+
   Future<void> _completeOnboarding(String uid) async {
     if (_formKey.currentState!.validate()) {
       // Recopilamos los materiales seleccionados
@@ -65,57 +96,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           .toList();
 
       try {
-        // Obtener el email del usuario autenticado
-        String? email = FirebaseAuth.instance.currentUser?.email;
-        String? imageUrl;
-        String? uid = FirebaseAuth.instance.currentUser?.uid;
-
-
-        if (uid == null) {
-          throw Exception('Usuario no autenticado');
-        }
-
-        // Subir imagen si fue seleccionada
+        
         if (_imageFile != null) {
-          final fileBytes = await _imageFile!.readAsBytes();
-
-          // Crear la ruta del archivo, incluyendo el uid en el bucket 'users'
-          final fileName =
-              'users/$uid/profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-          // Subir a Supabase Storage
-          final supabaseStorage =
-              Supabase.instance.client.storage.from('users');
-          final uploadResponse = await supabaseStorage.uploadBinary(
-            fileName,
-            fileBytes,
-            fileOptions: const FileOptions(
-                upsert: true), // Sobrescribe si el archivo existe
-          );
-
-          if (uploadResponse.error != null) {
-            throw Exception(
-                'Error al subir la imagen: ${uploadResponse.error!.message}');
-          }
-
-          // Obtener la URL pública de la imagen (opcional, según tu configuración)
-          imageUrl = supabaseStorage.getPublicUrl(fileName);
-        } else {
-          // Si no se sube ninguna imagen, asignar una imagen por defecto
-          imageUrl =
-              'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png';
+           await _uploadImageToSupabase(_imageFile!);
         }
 
         // Registrar datos en la colección 'users'
         await FirebaseFirestore.instance.collection('users').doc(uid).set({
           'user': _userController.text.trim(),
           'phone': _phoneController.text.trim(),
-          'country': selectedCountry,
-          'state': selectedState,
-          'city': selectedCity,
           'materials': selectedMaterials,
-          'profileImage': imageUrl,
+          'profileImage': _imageFile?.path ?? '' // Guardar la ruta local
         });
+        
+        final email = FirebaseAuth.instance.currentUser?.email;
 
         // Actualizar el estado de onboarding a true en la colección 'account' usando el email
         await FirebaseFirestore.instance
@@ -151,7 +145,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               itemCount: contents.length,
               onPageChanged: (int index) {
                 setState(() {
-                  currentIndex = index; // Actualiza el índice actual
+                  currentIndex = index;
                 });
               },
               itemBuilder: (_, i) {
@@ -181,94 +175,79 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       const SizedBox(height: 15),
-                      // Agregar checkboxes solo en una pestaña específica
-                      if (i == 1) // Aquí defines el índice de la pestaña
-                        Expanded(
-                          child: ListView(
-                            children: materialPreferences.keys.map((material) {
-                              return CheckboxListTile(
-                                title: Text(material),
-                                value: materialPreferences[material],
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    materialPreferences[material] =
-                                        value ?? false;
-                                  });
+                      if (i == contents.length - 1)
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              TextFormField(
+                                controller: _userController,
+                                decoration: const InputDecoration(
+                                  labelText: "Nombre de usuario",
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Por favor, ingresa tu nombre de usuario";
+                                  }
+                                  return null;
                                 },
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      // Formulario para datos del usuario en la última pestaña
-                      if (i == 2)
-                        Expanded(
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                TextFormField(
-                                  controller: _userController,
-                                  decoration: const InputDecoration(
-                                      labelText: "Usuario",
-                                      prefixIcon: Icon(Icons.person)),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Por favor ingresa tu nombre';
-                                    }
-                                    return null;
-                                  },
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _phoneController,
+                                decoration: const InputDecoration(
+                                  labelText: "Teléfono",
+                                  border: OutlineInputBorder(),
                                 ),
-                                const SizedBox(height: 10),
-                                TextFormField(
-                                  controller: _phoneController,
-                                  decoration: const InputDecoration(
-                                    labelText: "Teléfono",
-                                    prefixIcon: Icon(Icons.phone),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Por favor ingresa tu teléfono';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 10),
-                                CSCPicker(
-                                  showStates: true,
-                                  showCities: true,
-                                  onCountryChanged: (value) {
-                                    setState(() {
-                                      selectedCountry = value;
-                                      selectedState = null;
-                                      selectedCity = null;
-                                    });
-                                  },
-                                  onStateChanged: (value) {
-                                    setState(() {
-                                      selectedState = value;
-                                      selectedCity = null;
-                                    });
-                                  },
-                                  onCityChanged: (value) {
-                                    setState(() {
-                                      selectedCity = value;
-                                    });
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                // Mostrar la imagen seleccionada o predeterminada
-                                GestureDetector(
-                                  onTap: _pickImage,
-                                  child: CircleAvatar(
-                                    radius: 50,
-                                    backgroundImage: _imageFile != null
-                                        ? FileImage(File(_imageFile!.path))
-                                        : const NetworkImage(
-                                            'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png'), // Imagen predeterminada
+                                keyboardType: TextInputType.phone,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Por favor, ingresa tu número de teléfono";
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 15),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children:
+                                    materialPreferences.keys.map((material) {
+                                  return CheckboxListTile(
+                                    title: Text(material),
+                                    value: materialPreferences[material],
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        materialPreferences[material] =
+                                            value ?? false;
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                              const SizedBox(height: 15),
+                              ElevatedButton(
+                                onPressed: _pickImage,
+                                child: const Text('Seleccionar imagen'),
+                              ),
+                              if (_imageFile != null)
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Image.file(
+                                    File(_imageFile!.path),
+                                    height: 100,
+                                    width: 100,
+                                    fit: BoxFit.cover,
                                   ),
                                 ),
-                              ],
-                            ),
+                              const SizedBox(height: 15),
+                              ElevatedButton(
+                                onPressed: () => _completeOnboarding(
+                                  FirebaseAuth.instance.currentUser!.uid,
+                                ),
+                                child: const Text('Completar'),
+                              ),
+                            ],
                           ),
                         ),
                     ],
@@ -277,59 +256,52 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               },
             ),
           ),
-          // Dots de la página
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              contents.length,
-              (index) => buildDot(index, context),
-            ),
-          ),
-          // Botón para navegar entre pantallas
-          Container(
-            height: 40,
-            margin: const EdgeInsets.all(40),
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                if (currentIndex == contents.length - 1) {
-                  String uid = FirebaseAuth.instance.currentUser!.uid;
-
-                  _completeOnboarding(
-                      uid); // Completar onboarding en la última página
-                } else {
-                  _controller.nextPage(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton(
+                onPressed: () {
+                  _controller.previousPage(
                     duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeIn,
+                    curve: Curves.ease,
                   );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                },
+                child: const Text("Anterior"),
+              ),
+              Row(
+                children: List.generate(
+                  contents.length,
+                  (index) => Container(
+                    margin: const EdgeInsets.all(2),
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: currentIndex == index
+                          ? Colors.blue
+                          : Colors.grey.shade400,
+                    ),
+                  ),
                 ),
               ),
-              child: Text(
-                currentIndex == contents.length - 1 ? "Registrar" : "Next",
-                style: const TextStyle(color: Colors.white),
+              TextButton(
+                onPressed: () {
+                  if (currentIndex == contents.length - 1) {
+                    _completeOnboarding(FirebaseAuth.instance.currentUser!.uid);
+                  } else {
+                    _controller.nextPage(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.ease,
+                    );
+                  }
+                },
+                child: Text(currentIndex == contents.length - 1
+                    ? "Completar"
+                    : "Siguiente"),
               ),
-            ),
+            ],
           ),
         ],
-      ),
-    );
-  }
-
-  // Método para construir los dots
-  Container buildDot(int index, BuildContext context) {
-    return Container(
-      height: 10,
-      width: currentIndex == index ? 25 : 10,
-      margin: const EdgeInsets.only(right: 5),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Theme.of(context).primaryColor,
       ),
     );
   }

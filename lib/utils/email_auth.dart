@@ -42,6 +42,15 @@ class EmailAuth {
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
+
+      // Obtener el usuario actual después de autenticarse
+      final user = FirebaseAuth.instance.currentUser;
+
+      // Obtener el JWT (idToken)
+      final idToken = await user?.getIdToken();
+
+      // Imprimir el JWT para confirmar que se genera correctamente
+      print("JWT del usuario: $idToken");
       print("Inicio de sesión exitoso: ${userCredential.user?.email}");
       return 0; // Inicio de sesión exitoso
     } on FirebaseAuthException catch (e) {
@@ -63,6 +72,7 @@ class EmailAuth {
       return 5; // Error general
     }
   }
+
   // Método para enviar el correo de verificación
   Future<void> sendVerificationEmail() async {
     try {
@@ -89,7 +99,7 @@ class EmailAuth {
       return user.emailVerified;
     } else {
       print("No hay un usuario autenticado.");
-      return false;  // Si no hay un usuario autenticado, devuelve false
+      return false; // Si no hay un usuario autenticado, devuelve false
     }
   }
 
@@ -101,4 +111,3 @@ class EmailAuth {
     }
   }
 }
-

@@ -57,11 +57,7 @@ class ProfileScreen extends StatelessWidget {
 
           String userName = userData['user'] ?? 'No disponible';
           String phone = userData['phone'] ?? 'No disponible';
-          String country = userData['country'] ?? 'No disponible';
-          String state = userData['state'] ?? 'No disponible';
-          String city = userData['city'] ?? 'No disponible';
-          String profileImage = userData['profileImage'] ??
-              'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png';
+          String profileImage = userData['profileImage'];
 
           // Obtener el proveedor y la imagen correspondiente
           String provider = _getAuthProviderName(user!);
@@ -122,11 +118,6 @@ class ProfileScreen extends StatelessWidget {
                   child: ListView(
                     children: [
                       _buildInfoCard('Teléfono', phone, Icons.phone, context),
-                      _buildInfoCard('País', country, Icons.flag, context),
-                      _buildInfoCard(
-                          'Estado', state, Icons.location_city, context),
-                      _buildInfoCard(
-                          'Ciudad', city, Icons.location_on, context),
                     ],
                   ),
                 ),
