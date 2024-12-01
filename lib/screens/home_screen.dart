@@ -1,4 +1,5 @@
 import 'package:animated_floating_buttons/widgets/animated_floating_action_button.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (user != null) {
       setState(() {
-        email = user.email ?? 'Correo no disponible';
+        
         photoUrl = user.photoURL ??
             'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png';
         providerId = user.providerData.isNotEmpty
@@ -46,87 +47,135 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Función para obtener los datos del usuario
+  Future<Map<String, dynamic>> _getinfo() async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) throw 'Usuario no autenticado';
+
+      final userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (!userDoc.exists) throw 'No se encontraron datos del usuario';
+
+      return userDoc.data()!;
+    } catch (e) {
+      print('Error al obtener datos del usuario: $e');
+      throw e;
+    }
+  }
+
   // Métodos para obtener las pantallas
   final List<Widget> _pages = [
     InformationScreen(), // Widget para la información
     RecyclingMapScreen(), // Widget para el mapa
-    ActiveEventsScreen(), // Widget para eventos activos
+    const ActiveEventsScreen(), // Widget para eventos activos
   ];
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: themeProvider.drawerColor, // Fondo verde en la AppBar
-        title: const Text('VidaVerde',
-        style: TextStyle(color: Colors.white)),
+        title: const Text('VidaVerde', style: TextStyle(color: Colors.white)),
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: themeProvider.drawerColor // Fondo verde oscuro en el DrawerHeader
-              ),
-              child: Row(
-                children: [
-                  // Mostrar foto del usuario
-                  CircleAvatar(
-                    radius: 35,
-                    backgroundImage: NetworkImage(photoUrl ??
-                        'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png'),
+        child: FutureBuilder<Map<String, dynamic>>(
+          future:
+              _getinfo(), // Llama a la función que obtiene los datos del usuario
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData) {
+              return const Center(child: Text('No se encontraron datos'));
+            }
+
+            final userData = snapshot.data!;
+            final photoUrl = userData['profileImage'] ??
+                'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/users/default-avatar.png';
+            
+            final userName = userData['user'] ?? 'Usuario desconocido';
+            
+
+            return ListView(
+              padding: EdgeInsets.zero,
+              children: <Widget>[
+                DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: themeProvider
+                        .drawerColor, // Fondo verde oscuro en el DrawerHeader
                   ),
-                  const SizedBox(width: 10),
-                ],
-              ),
-            ),
-            ListTile(
-              leading:
-                  const Icon(Icons.account_circle, color: Colors.black), // Ícono verde
-              title: const Text('Perfil',
-                  style: TextStyle(color: Colors.black)), // Texto verde
-              onTap: () {
-                Navigator.pushNamed(context, '/profile');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.color_lens, color: Colors.black), // Ícono verde
-              title: const Text('Cambiar colores y letras',
-                  style: TextStyle(color:Colors.black)), // Texto verde
-              onTap: () {
-                Navigator.pushNamed(context, '/color'); // Navegar a la pantalla de cambiar colores
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.event, color: Colors.black), // Ícono verde
-              title: const Text('Agregar un evento',
-                  style: TextStyle(color: Colors.black)), // Texto verde
-              onTap: () {
-                Navigator.pushNamed(context, '/add_event'); // Navegar a la pantalla de cambiar colores
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.workspace_premium, color: Colors.black), // Ícono verde
-              title: const Text('Hazte premium',
-                  style: TextStyle(color:Colors.black)), // Texto verde
-              onTap: () {
-                Navigator.pushNamed(context, '/products'); // Navegar a la pantalla de cambiar colores
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.exit_to_app, color: Colors.black), // Ícono verde
-              title: const Text('Cerrar sesión',
-                  style: TextStyle(color: Colors.black)), // Texto verde
-              onTap: () async {
-                // Cerrar sesión en Firebase
-                await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacementNamed(context, '/login'); // Redirigir a la pantalla de login
-              },
-            ),
-          ],
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 35,
+                        backgroundImage: NetworkImage(photoUrl),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            userName,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                ListTile(
+                  leading:
+                      const Icon(Icons.account_circle, color: Colors.black),
+                  title: const Text('Perfil',
+                      style: TextStyle(color: Colors.black)),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/profile');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.color_lens, color: Colors.black),
+                  title: const Text('Cambiar colores y letras',
+                      style: TextStyle(color: Colors.black)),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/color');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.event, color: Colors.black),
+                  title: const Text('Agregar un evento',
+                      style: TextStyle(color: Colors.black)),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/add_event');
+                  },
+                ),
+                ListTile(
+                  leading:
+                      const Icon(Icons.workspace_premium, color: Colors.black),
+                  title: const Text('Hazte premium',
+                      style: TextStyle(color: Colors.black)),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/products');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.exit_to_app, color: Colors.black),
+                  title: const Text('Cerrar sesión',
+                      style: TextStyle(color: Colors.black)),
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ),
       body: IndexedStack(
@@ -134,23 +183,24 @@ class _HomeScreenState extends State<HomeScreen> {
         children: _pages,
       ),
       bottomNavigationBar: Consumer<ThemeProvider>(
-  builder: (context, themeProvider, child) {
-    return ConvexAppBar(
-      backgroundColor: themeProvider.drawerColor,
-      items: const [
-        TabItem(icon: Icons.info_rounded, title: 'Informacion'),
-        TabItem(icon: Icons.map, title: 'Recycling Map'),
-        TabItem(icon: Icons.event, title: 'Eventos'),
-      ],
-      initialActiveIndex: 0,
-      onTap: (int index) {
-        setState(() {
-          _currentIndex = index; // Cambia la pantalla al índice seleccionado
-        });
-      },
-    );
-  },
-),
+        builder: (context, themeProvider, child) {
+          return ConvexAppBar(
+            backgroundColor: themeProvider.drawerColor,
+            items: const [
+              TabItem(icon: Icons.info_rounded, title: 'Información'),
+              TabItem(icon: Icons.map, title: 'Recycling Map'),
+              TabItem(icon: Icons.event, title: 'Eventos'),
+            ],
+            initialActiveIndex: 0,
+            onTap: (int index) {
+              setState(() {
+                _currentIndex =
+                    index; // Cambia la pantalla al índice seleccionado
+              });
+            },
+          );
+        },
+      ),
     );
   }
 }

@@ -96,9 +96,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           .toList();
 
       try {
-        
+        String? imageUrl;
         if (_imageFile != null) {
-           await _uploadImageToSupabase(_imageFile!);
+           imageUrl = await _uploadImageToSupabase(_imageFile!);
         }
 
         // Registrar datos en la colección 'users'
@@ -106,7 +106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'user': _userController.text.trim(),
           'phone': _phoneController.text.trim(),
           'materials': selectedMaterials,
-          'profileImage': _imageFile?.path ?? '' // Guardar la ruta local
+          'profileImage': imageUrl ?? 'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/profile-images/profile-images/images.jpg' // Guardar la ruta local
         });
         
         final email = FirebaseAuth.instance.currentUser?.email;
