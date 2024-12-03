@@ -1,7 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
+import 'package:proyecto_moviles/consts.dart';
 import 'package:proyecto_moviles/providers/theme_provider.dart';
 import 'package:proyecto_moviles/screens/add_event_screen.dart';
 import 'package:proyecto_moviles/screens/add_location_screen.dart';
@@ -18,6 +20,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized(); // Asegura que la app esté completamente inicializada
+
+  Stripe.publishableKey = stripePublishableKey;
+  
   await Firebase.initializeApp(); // Inicializa Firebase
 
 

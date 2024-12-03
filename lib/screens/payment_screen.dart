@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proyecto_moviles/services/stripe_service.dart';
 
 class PaymentScreen extends StatelessWidget {
   final Map<String, dynamic> subscription;
@@ -19,12 +20,23 @@ class PaymentScreen extends StatelessWidget {
             SizedBox(height: 40),
             ElevatedButton(
               onPressed: () async {
-                // Aquí puedes integrar el proceso de pago real
-                bool paymentSuccess = await _processPayment(subscription);
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) => Center(child: CircularProgressIndicator()),
+                );
+                // Proceso de pago con Stripe
+                bool paymentSuccess = await _processPayment(subscription, context);
+                Navigator.pop(context); // Cierra el diálogo de carga
                 if (paymentSuccess) {
-                  Navigator.pop(context, true);  // Volver y confirmar éxito
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Payment Successful!')),
+                  );
+                  Navigator.pop(context, true); // Regresa confirmando éxito
                 } else {
-                  Navigator.pop(context, false); // Volver y confirmar fallo
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Payment Failed. Please try again.')),
+                  );
                 }
               },
               child: Text('Pay Now'),
@@ -35,8 +47,18 @@ class PaymentScreen extends StatelessWidget {
     );
   }
 
-  Future<bool> _processPayment(Map<String, dynamic> subscription) async {
-    // Implementar lógica de pago aquí, por ejemplo, usando un servicio de pago.
-    return await Future.delayed(Duration(seconds: 2), () => true);  // Simulación de pago
+  Future<bool> _processPayment(Map<String, dynamic> subscription, BuildContext context) async {
+    try {
+      // Convertir el monto a centavos (Stripe usa valores enteros)
+      int amountInCents = (subscription['price'] * 100).toInt();
+      await StripeService.instance.makePayment(
+        amount: amountInCents,
+        currency: 'usd',
+      );
+      return true; // Éxito
+    } catch (e) {
+      print('Error during payment: $e');
+      return false; // Fallo
+    }
   }
-}    
+}

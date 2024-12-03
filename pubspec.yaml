@@ -49,11 +49,8 @@ dependencies:
   flutter_polyline_points: 
 
   #pagos
-  shelf:
-  url_launcher: 
-  flutter_stripe:
   carousel_slider_plus:
-  http:
+  flutter_stripe:
 
 dev_dependencies:
   flutter_test:
