@@ -148,80 +148,119 @@ Future<Map<String, dynamic>> _getUserSubscription() async {
   }
 }
 
-
-
-
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text('Choose Subscription'),
-    ),
-    body: FutureBuilder<Map<String, dynamic>>(
-      future: _getUserSubscription(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error loading subscription status.'));
-        } else {
-          final userSubscription = snapshot.data ?? {};
-          return Column(
-            children: [
-              if (userSubscription.isNotEmpty) ...[
-                Text(
-                  'Active Subscription: ${userSubscription['pay_subscription']?['name'] ?? 'None'}',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Expiry Date: ${userSubscription['pay_subscription']?['expiryDate'] ?? 'N/A'}',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ],
-              Expanded(
-                child: subscriptions_pay.isEmpty
-                    ? Center(child: CircularProgressIndicator())
-                    : CarouselSlider(
-                        options: CarouselOptions(
-                          height: 400,
-                          enlargeCenterPage: true,
-                          autoPlay: true,
-                        ),
-                        items: subscriptions_pay.map((subscription) {
-                          return GestureDetector(
-                            onTap: () => _handleSubscriptionTap(subscription),
-                            child: Card(
-                              margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    subscription['name'],
-                                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                                  ),
-                                  SizedBox(height: 10),
-                                  Text(
-                                    '\$${subscription['price']}',
-                                    style: TextStyle(fontSize: 20, color: Colors.green),
-                                  ),
-                                  SizedBox(height: 10),
-                                  Text(subscription['description']),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList(),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Elige tu suscripcion', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.blueAccent,
+        elevation: 4,
+      ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _getUserSubscription(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error loading subscription status.'));
+          } else {
+            final userSubscription = snapshot.data ?? {};
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (userSubscription.isNotEmpty) ...[
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Suscripcion Activa: ${userSubscription['pay_subscription']?['name'] ?? 'None'}',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue[800]),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Fecha de expiración: ${userSubscription['pay_subscription']?['expiryDate'] ?? 'N/A'}',
+                            style: TextStyle(fontSize: 16, color: Colors.blue[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                  ],
+                  Text(
+                    'Sucripciones disponibles',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                  ),
+                  SizedBox(height: 10),
+                  Expanded(
+                    child: subscriptions_pay.isEmpty
+                        ? Center(child: CircularProgressIndicator())
+                        : CarouselSlider(
+                            options: CarouselOptions(
+                              height: 400,
+                              enlargeCenterPage: true,
+                              autoPlay: true,
+                              aspectRatio: 16 / 9,
+                              viewportFraction: 0.8,
+                            ),
+                            items: subscriptions_pay.map((subscription) {
+                              return GestureDetector(
+                                onTap: () => _handleSubscriptionTap(subscription),
+                                child: Card(
+                                  margin: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  elevation: 5,
+                                  shadowColor: Colors.black.withOpacity(0.2),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        subscription['name'],
+                                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                                      ),
+                                      SizedBox(height: 10),
+                                      Text(
+                                        '\$${subscription['price']}',
+                                        style: TextStyle(fontSize: 20, color: Colors.green),
+                                      ),
+                                      SizedBox(height: 10),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          subscription['description'],
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                  ),
+                ],
               ),
-            ],
-          );
-        }
-      },
-    ),
-  );
-}
-
+            );
+          }
+        },
+      ),
+    );
+  }
 }
