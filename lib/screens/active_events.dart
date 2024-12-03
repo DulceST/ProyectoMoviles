@@ -96,9 +96,6 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
 
       await messaging.subscribeToTopic(eventId);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('¡Te has suscrito al evento "$eventName"!')),
-      );
     } catch (e) {
       print('Error al suscribirse: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -132,9 +129,6 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
 
       await messaging.unsubscribeFromTopic(eventId);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Has cancelado tu suscripción al evento "$eventName".')),
-      );
     } catch (e) {
       print('Error al cancelar suscripción: $e');
       ScaffoldMessenger.of(context).showSnackBar(
