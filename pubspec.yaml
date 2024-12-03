@@ -52,6 +52,7 @@ dependencies:
   #pagos
   carousel_slider_plus:
   flutter_stripe:
+  quickalert: ^1.1.0
 
 dev_dependencies:
   flutter_test:

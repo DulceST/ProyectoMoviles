@@ -8,6 +8,8 @@ import 'package:proyecto_moviles/providers/theme_provider.dart';
 import 'package:proyecto_moviles/screens/information_screen.dart';
 import 'package:proyecto_moviles/screens/recycling_map_screen.dart';
 import 'package:proyecto_moviles/screens/active_events.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -143,8 +145,68 @@ class _HomeScreenState extends State<HomeScreen> {
                   leading: const Icon(Icons.color_lens, color: Colors.black),
                   title: const Text('Cambiar colores y letras',
                       style: TextStyle(color: Colors.black)),
-                  onTap: () {
-                    Navigator.pushNamed(context, '/color');
+                  onTap: () async {
+                    // Verificar si el usuario tiene una suscripción activa
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please log in to access this option.')),
+                      );
+                      return; // Si el usuario no está logueado, no continuar
+                    }
+
+                    // Obtener la suscripción del usuario
+                    try {
+                      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+                      if (userDoc.exists) {
+                        final userSubscription = userDoc.data() as Map<String, dynamic>;
+                        final subscription = userSubscription['pay_subscription'];
+
+                        if (subscription != null && subscription['expiryDate'] != null) {
+                          DateTime expiryDate = DateTime.parse(subscription['expiryDate']);
+                          if (expiryDate.isAfter(DateTime.now())) {
+                            // Si la suscripción está activa, navegar a la pantalla de colores
+                            Navigator.pushNamed(context, '/color');
+                          } else {
+                            // Si la suscripción ha expirado, mostrar una alerta
+                            QuickAlert.show(
+                              context: context,
+                              type: QuickAlertType.error,
+                              title: 'Subscription Expired',
+                              text: 'Your subscription has expired. Please renew it.',
+                              confirmBtnText: 'Renew',
+                              onConfirmBtnTap: () {
+                                // Aquí puedes navegar a la pantalla de suscripción
+                                Navigator.pushNamed(context, '/subscription');
+                              },
+                            );
+                          }
+                        } else {
+                          // Si no hay suscripción activa, mostrar alerta con QuickAlert
+                          QuickAlert.show(
+                            context: context,
+                            type: QuickAlertType.error,
+                            title: 'No Active Subscription',
+                            text: 'You need an active subscription to access this option.',
+                            confirmBtnText: 'Get Subscription',
+                            onConfirmBtnTap: () {
+                              // Aquí puedes navegar a la pantalla de suscripción
+                              Navigator.pushNamed(context, '/products');
+                            },
+                          );
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('User data not found.')),
+                        );
+                      }
+                    } catch (e) {
+                      print('Error checking subscription: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('An error occurred. Please try again later.')),
+                      );
+                    }
                   },
                 ),
                 ListTile(
