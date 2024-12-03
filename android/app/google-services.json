@@ -17,7 +17,7 @@
           "client_id": "979154191903-o5hf9dkruap8cih3f2fsbg08rj7nj8r0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.proyecto_moviles.app",
+            "package_name": "com.example.proyecto_moviles",
             "certificate_hash": "06f7428d99c1562686769749d50c7911d99cad8a"
           }
         },
