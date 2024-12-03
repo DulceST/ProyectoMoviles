@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:proyecto_moviles/services/googleSignService.dart';
+import 'package:proyecto_moviles/services/google_auth.dart';
 import 'package:proyecto_moviles/utils/email_auth.dart';
 
 class LoginpScreen extends StatefulWidget {
@@ -406,10 +408,13 @@ class _LoginpScreenState extends State<LoginpScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              onPressed: () {},
+              onPressed: () async {
+                await GoogleSignInService().signInWithGoogle(context);
+              },
               icon: const FaIcon(FontAwesomeIcons.google),
               iconSize: 40,
             ),
+
             const SizedBox(width: 20),
             IconButton(
               onPressed: () {},
