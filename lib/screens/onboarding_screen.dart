@@ -98,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       try {
         String? imageUrl;
         if (_imageFile != null) {
-           imageUrl = await _uploadImageToSupabase(_imageFile!);
+          imageUrl = await _uploadImageToSupabase(_imageFile!);
         }
 
         // Registrar datos en la colección 'users'
@@ -106,9 +106,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           'user': _userController.text.trim(),
           'phone': _phoneController.text.trim(),
           'materials': selectedMaterials,
-          'profileImage': imageUrl ?? 'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/profile-images/profile-images/images.jpg' // Guardar la ruta local
+          'profileImage': imageUrl ??
+              'https://dfnuozwjrdndrnissctb.supabase.co/storage/v1/object/public/profile-images/profile-images/images.jpg' // Guardar la ruta local
         });
-        
+
         final email = FirebaseAuth.instance.currentUser?.email;
 
         // Actualizar el estado de onboarding a true en la colección 'account' usando el email
@@ -137,6 +138,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
           Expanded(
@@ -153,101 +155,190 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   padding: const EdgeInsets.all(10),
                   child: Column(
                     children: [
-                      if (contents[i].lottie != null)
-                        Lottie.network(
-                          contents[i].lottie!,
-                          height: 300,
-                        ),
-                      Text(
-                        contents[i].title,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      Text(
-                        contents[i].description,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      if (i == contents.length - 1)
-                        Form(
-                          key: _formKey,
-                          child: Column(
-                            children: [
-                              TextFormField(
-                                controller: _userController,
-                                decoration: const InputDecoration(
-                                  labelText: "Nombre de usuario",
-                                  border: OutlineInputBorder(),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "Por favor, ingresa tu nombre de usuario";
-                                  }
-                                  return null;
-                                },
+                      // Pantalla 1: Bienvenida
+                      if (i == 0)
+                        Column(
+                          children: [
+                            if (contents[i].lottie != null)
+                              const SizedBox(height: 60),
+                            Lottie.asset(
+                              contents[i].lottie!,
+                              height: 260,
+                            ),
+                            Text(
+                              contents[i].title,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(height: 10),
-                              TextFormField(
-                                controller: _phoneController,
-                                decoration: const InputDecoration(
-                                  labelText: "Teléfono",
-                                  border: OutlineInputBorder(),
-                                ),
-                                keyboardType: TextInputType.phone,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return "Por favor, ingresa tu número de teléfono";
-                                  }
-                                  return null;
-                                },
+                            ),
+                            const SizedBox(height: 15),
+                            Text(
+                              contents[i].description,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
                               ),
-                              const SizedBox(height: 15),
-                              Column(
+                            ),
+                          ],
+                        ),
+
+                      // Pantalla 2: Encuentra puntos de reciclaje
+                      if (i == 1)
+                        Column(
+                          children: [
+                            if (contents[i].lottie != null)
+                              const SizedBox(height: 80),
+                            Lottie.asset(
+                              contents[i].lottie!,
+                              height: 200,
+                            ),
+                            Text(
+                              contents[i].title,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 15),
+                            Text(
+                              contents[i].description,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            // Preferencias de materiales
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children:
+                                  materialPreferences.keys.map((material) {
+                                return CheckboxListTile(
+                                  title: Text(material),
+                                  value: materialPreferences[material],
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      materialPreferences[material] =
+                                          value ?? false;
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+
+                      // Pantalla 3: Registro de usuario
+                      if (i == 2)
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children:
-                                    materialPreferences.keys.map((material) {
-                                  return CheckboxListTile(
-                                    title: Text(material),
-                                    value: materialPreferences[material],
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        materialPreferences[material] =
-                                            value ?? false;
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                              const SizedBox(height: 15),
-                              ElevatedButton(
-                                onPressed: _pickImage,
-                                child: const Text('Seleccionar imagen'),
-                              ),
-                              if (_imageFile != null)
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Image.file(
-                                    File(_imageFile!.path),
-                                    height: 100,
-                                    width: 100,
-                                    fit: BoxFit.cover,
+                                children: [
+                                  const SizedBox(height: 80),
+                                  Lottie.asset(
+                                    contents[i].lottie!,
+                                    height: 130,
                                   ),
-                                ),
-                              const SizedBox(height: 15),
-                              ElevatedButton(
-                                onPressed: () => _completeOnboarding(
-                                  FirebaseAuth.instance.currentUser!.uid,
-                                ),
-                                child: const Text('Completar'),
+                                  Text(
+                                    contents[i].title,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 15),
+                                  Text(
+                                    contents[i].description,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 15),
+
+                                  // Formulario de registro
+                                  Form(
+                                    key: _formKey,
+                                    child: Column(
+                                      children: [
+                                        TextFormField(
+                                          controller: _userController,
+                                          decoration: const InputDecoration(
+                                            labelText: "Nombre de usuario",
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(8)),
+                                            ),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                    horizontal: 15),
+                                          ),
+                                          validator: (value) {
+                                            if (value == null ||
+                                                value.isEmpty) {
+                                              return "Por favor, ingresa tu nombre de usuario";
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        const SizedBox(height: 10),
+                                        TextFormField(
+                                          controller: _phoneController,
+                                          decoration: const InputDecoration(
+                                            labelText: "Teléfono",
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.all(
+                                                  Radius.circular(8)),
+                                            ),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                    horizontal: 15),
+                                          ),
+                                          keyboardType: TextInputType.phone,
+                                          validator: (value) {
+                                            if (value == null ||
+                                                value.isEmpty) {
+                                              return "Por favor, ingresa tu número de teléfono";
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                        const SizedBox(height: 15),
+
+                                        // Seleccionar imagen
+                                        ElevatedButton(
+                                          onPressed: _pickImage,
+                                          child: const Text(
+                                              'Seleccionar imagen',
+                                              style: TextStyle(
+                                                  color: Colors.green)),
+                                        ),
+                                        if (_imageFile != null)
+                                          Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Image.file(
+                                              File(_imageFile!.path),
+                                              height: 100,
+                                              width: 100,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        const SizedBox(height: 15),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                     ],
@@ -256,6 +347,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               },
             ),
           ),
+
+          // Navegación entre pantallas
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -266,19 +359,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     curve: Curves.ease,
                   );
                 },
-                child: const Text("Anterior"),
+                child: const Text("Anterior",
+                    style: TextStyle(color: Colors.green)),
               ),
               Row(
                 children: List.generate(
                   contents.length,
                   (index) => Container(
-                    margin: const EdgeInsets.all(2),
+                    margin: const EdgeInsets.all(1),
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: currentIndex == index
-                          ? Colors.blue
+                          ? Colors.green
                           : Colors.grey.shade400,
                     ),
                   ),
@@ -295,9 +389,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     );
                   }
                 },
-                child: Text(currentIndex == contents.length - 1
-                    ? "Completar"
-                    : "Siguiente"),
+                child: Text(
+                    currentIndex == contents.length - 1
+                        ? "Completar"
+                        : "Siguiente",
+                    style: const TextStyle(color: Colors.green)),
               ),
             ],
           ),
