@@ -1,8 +1,11 @@
+import 'package:accordion/accordion.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:proyecto_moviles/models/recycling_location.dart';
+import 'package:proyecto_moviles/providers/theme_provider.dart';
 
 class RecyclingMapScreen extends StatefulWidget {
   @override
@@ -215,6 +218,8 @@ void setupFirestoreListeners() {
 
   @override
   Widget build(BuildContext context) {
+        final themeProvider = Provider.of<ThemeProvider>(context);
+
     // Combina ambos conjuntos de marcadores
     final combinedMarkers = {...recyclingMarkers, ...eventMarkers};
 
@@ -244,25 +249,48 @@ void setupFirestoreListeners() {
                   ),
                   markers: combinedMarkers, // Usa los marcadores combinados
                 )
-              : ListView(
-                  children: combinedMarkers.map((marker) {
-                    return ListTile(
-                      title: Text(marker.infoWindow.title ?? ''),
-                      subtitle: Text(marker.infoWindow.snippet ?? ''),
-                      onTap: () => marker.infoWindow.onTap?.call(),
-                    );
-                  }).toList(),
-                )),
-      floatingActionButton: Align(
-        alignment: Alignment.bottomLeft,
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.pushNamed(context, "/add_location");
-          },
-          tooltip: 'Add Location',
-          child: Icon(Icons.add_location),
-        ),
+              : Accordion(
+                maxOpenSections: 1,
+                headerBackgroundColor: themeProvider.primaryColor, // Color dinámico del encabezado
+                contentBackgroundColor: themeProvider.cardColor, // Color dinámico del contenido
+                headerPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                children: combinedMarkers.map((marker) {
+                  return AccordionSection(
+                    header: Text(
+                      marker.infoWindow.title ?? '',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    content: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          marker.infoWindow.snippet ?? '',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () => marker.infoWindow.onTap?.call(),
+                          child: Text('Ver detalles'),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              )),
+    floatingActionButton: Align(
+      alignment: Alignment.bottomLeft,
+      child: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, "/add_location");
+        },
+        tooltip: 'Add Location',
+        child: Icon(Icons.add_location),
       ),
-    );
-  }
+    ),
+  );
+}
 }

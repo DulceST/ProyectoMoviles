@@ -1,8 +1,12 @@
+import 'package:accordion/accordion.dart';
+import 'package:accordion/accordion_section.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:provider/provider.dart';
+import 'package:proyecto_moviles/providers/theme_provider.dart';
 
 class ActiveEventsScreen extends StatefulWidget {
   const ActiveEventsScreen({super.key});
@@ -137,70 +141,71 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('recycling_events')
-            .orderBy('start_date', descending: false)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+ @override
+Widget build(BuildContext context) {
+  final themeProvider = Provider.of<ThemeProvider>(context);
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No hay eventos disponibles'));
-          }
+  return Scaffold(
+    body: StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('recycling_events')
+          .orderBy('start_date', descending: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          final now = DateTime.now();
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text('No hay eventos disponibles'));
+        }
 
-          final activeEvents = snapshot.data!.docs.where((event) {
+        final now = DateTime.now();
+
+        final activeEvents = snapshot.data!.docs.where((event) {
+          final startDate = (event['start_date'] as Timestamp).toDate();
+          final durationDays = event['duration_days'] ?? 0;
+          final endDate = startDate.add(Duration(days: durationDays));
+          return now.isAfter(startDate) && now.isBefore(endDate);
+        }).toList();
+
+        if (activeEvents.isEmpty) {
+          return const Center(child: Text('No hay eventos activos actualmente'));
+        }
+
+        return Accordion(
+          maxOpenSections: 1,
+          headerBackgroundColor: themeProvider.primaryColor, // Color dinámico del encabezado
+          contentBackgroundColor: themeProvider.cardColor, // Color dinámico del contenido
+          headerPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+          children: activeEvents.map((event) {
+            final eventId = event.id;
+            final eventName = event['name'];
             final startDate = (event['start_date'] as Timestamp).toDate();
             final durationDays = event['duration_days'] ?? 0;
             final endDate = startDate.add(Duration(days: durationDays));
-            return now.isAfter(startDate) && now.isBefore(endDate);
-          }).toList();
+            final isSubscribed = subscribedEvents.contains(eventId);
 
-          if (activeEvents.isEmpty) {
-            return const Center(child: Text('No hay eventos activos actualmente'));
-          }
-
-          return ListView.builder(
-            itemCount: activeEvents.length,
-            itemBuilder: (context, index) {
-              final event = activeEvents[index];
-              final eventId = event.id;
-              final eventName = event['name'];
-              final startDate = (event['start_date'] as Timestamp).toDate();
-              final durationDays = event['duration_days'] ?? 0;
-              final endDate = startDate.add(Duration(days: durationDays));
-              final isSubscribed = subscribedEvents.contains(eventId);
-
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16.0),
+            return AccordionSection(
+              header: Text(
+                eventName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16.0),
-                  title: Text(
-                    eventName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text(
+              ),
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
                     'Del ${startDate.toLocal().toString().split(' ')[0]} al ${endDate.toLocal().toString().split(' ')[0]}\n${event['description']}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey,
                     ),
                   ),
-                  trailing: isSubscribed
+                  const SizedBox(height: 8),
+                  isSubscribed
                       ? ElevatedButton.icon(
                           onPressed: () => unsubscribeFromEvent(eventId, eventName),
                           icon: const Icon(Icons.cancel, color: Colors.white),
@@ -215,7 +220,10 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
                       : ElevatedButton.icon(
                           onPressed: () => subscribeToEvent(eventId, eventName),
                           icon: const Icon(Icons.check_circle, color: Colors.white),
-                          label: const Text('Suscribirse',style: TextStyle(color: Colors.black),),
+                          label: const Text(
+                            'Suscribirse',
+                            style: TextStyle(color: Colors.black),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromARGB(255, 161, 225, 163),
                             shape: RoundedRectangleBorder(
@@ -223,12 +231,13 @@ class _ActiveEventsScreenState extends State<ActiveEventsScreen> {
                             ),
                           ),
                         ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-    );
-  }
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+    ),
+  );
+}
 }

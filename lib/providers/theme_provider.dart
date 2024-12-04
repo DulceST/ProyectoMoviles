@@ -8,6 +8,12 @@ class ThemeProvider extends ChangeNotifier {
   Color get drawerColor => _drawerColor;
   String get fontFamily => _fontFamily;
 
+  get primaryColor => null;
+
+  get cardColor => null;
+
+  get isDarkMode => null;
+
   // Método para actualizar el color
   void setDrawerColor(Color color) async {
     _drawerColor = color;
