@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:proyecto_moviles/providers/theme_provider.dart';
+import 'package:proyecto_moviles/screens/update_profile.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -74,7 +75,7 @@ class ProfileScreen extends StatelessWidget {
     return '';
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
@@ -105,10 +106,10 @@ class ProfileScreen extends StatelessWidget {
 
           String userName = userData['user'] ?? 'No disponible';
           String phone = userData['phone'] ?? 'No disponible';
-          String profileImage = userData['profileImage'] ??
-              'https://via.placeholder.com/150';
-          // Acceso a expiryDate dentro del mapa pay_subscription
-          String subscriptionExpiry = userData['pay_subscription']?['expiryDate'] ?? 'No disponible';
+          String profileImage =
+              userData['profileImage'] ?? 'https://via.placeholder.com/150';
+          String subscriptionExpiry =
+              userData['subscriptionExpiry'] ?? 'No disponible';
 
           String provider = _getAuthProviderName(user!);
           String providerImage = _getProviderImage(provider);
@@ -139,24 +140,41 @@ class ProfileScreen extends StatelessWidget {
                 Expanded(
                   child: ListView(
                     children: [
-                      _buildInfoCard(
-                          'Usuario', userName, Icons.person, context, () {
-                        _showUpdateDialog(context, 'Usuario', userName);
-                      }),
+                      _buildInfoCard('Usuario', userName, Icons.person, context,
+                          () {}),
                       _buildInfoCard('Teléfono', phone, Icons.phone, context,
-                          () {
-                        _showUpdateDialog(context, 'Teléfono', phone);
-                      }),
+                          () {}),
                       _buildInfoCard(
                           'Expiración de Suscripción',
                           subscriptionExpiry,
                           Icons.calendar_today,
-                          context,
-                          () {
-                        _showUpdateDialog(
-                            context, 'Expiración de Suscripción', subscriptionExpiry);
-                      }),
+                          context, () {}),
                     ],
+                  ),
+                ),
+                // Botón para actualizar
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Mostrar la ventana emergente para actualizar información
+                      showDialog(
+                        context: context,
+                        builder: (context) => UpdateProfileDialog(
+                          initialName: userName,
+                          initialPhone: phone,
+                          initialImage: profileImage,
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Actualizar Información'),
                   ),
                 ),
               ],
@@ -166,6 +184,8 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
+  
 
   Widget _buildProviderRow(
       String providerImage, String email, BuildContext context) {
@@ -218,6 +238,7 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+  
 
   String _getProviderImage(String provider) {
     switch (provider) {
