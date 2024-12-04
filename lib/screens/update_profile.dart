@@ -27,7 +27,10 @@ class _UpdateProfileDialogState extends State<UpdateProfileDialog> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+  XFile? _imageFile;
+  
+  get path => null;
 
   @override
   void initState() {
@@ -35,35 +38,59 @@ class _UpdateProfileDialogState extends State<UpdateProfileDialog> {
     _nameController.text = widget.initialName ?? '';
     _phoneController.text = widget.initialPhone ?? '';
   }
-
-  Future<void> _selectImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
-    }
+Future<void> _pickImage() async {
+  final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+  if (pickedFile != null) {
+    setState(() {
+      _imageFile = pickedFile;
+    });
+  } else {
+    // Si no se selecciona una imagen, mostrar mensaje
+    print('No se ha seleccionado ninguna imagen');
   }
+}
 
-  Future<String?> _uploadImageToSupabase(File imageFile) async {
-    try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase.storage
-          .from('profile-images')
-          .upload('images/${DateTime.now().millisecondsSinceEpoch}.jpg', imageFile);
+  Future<String?> _uploadImageToSupabase(XFile imageFile) async {
+  try {
+    final supabaseClient = Supabase.instance.client;
+    final storage = supabaseClient.storage.from('profile-images');
 
-      if (response.error == null) {
-        return supabase.storage.from('profile-images').getPublicUrl(response.data!);
-      } else {
-        throw Exception('Error al subir imagen: ${response.error?.message}');
-      }
-    } catch (e) {
-      print('Error al subir la imagen: $e');
+    // Verificar que imageFile y su ruta no sean nulos
+    if (imageFile.path.isEmpty) {
+      print('El archivo de imagen es inválido');
       return null;
     }
+
+    // Obtener el nombre del archivo
+    final fileName = path.basename(imageFile.path);
+    if (fileName.isEmpty) {
+      print('El nombre del archivo no es válido');
+      return null;
+    }
+
+    final filePath = 'profile-images/$fileName';
+    final file = File(imageFile.path);
+
+    // Subir el archivo a Supabase
+    final response = await storage.upload(filePath, file);
+
+    if (response.error != null) {
+      print('Error al subir la imagen: ${response.error?.message}');
+      return null;
+    }
+
+    // Obtener la URL pública de la imagen cargada
+    final imageUrl = storage.getPublicUrl(filePath).data;
+    print('URL de la imagen: $imageUrl');
+
+    return imageUrl;
+  } catch (e) {
+    print('Error al subir la imagen: $e');
+    return null;
   }
+}
+
+
 
   Future<void> _updateUserData() async {
     if (_formKey.currentState!.validate()) {
@@ -126,14 +153,14 @@ class _UpdateProfileDialogState extends State<UpdateProfileDialog> {
               ),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: _selectImage,
+                onPressed: _pickImage,
                 child: const Text('Seleccionar foto'),
               ),
               if (_imageFile != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: Image.file(
-                    _imageFile!,
+                    File(_imageFile!.path),
                     width: 100,
                     height: 100,
                     fit: BoxFit.cover,
