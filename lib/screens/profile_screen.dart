@@ -3,27 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:proyecto_moviles/providers/theme_provider.dart';
-import 'package:proyecto_moviles/screens/update_profile.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
-  @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends State<ProfileScreen> {
-  late Future<DocumentSnapshot> _userDataFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
-  }
-
-  void _loadUserData() {
-    _userDataFuture = _getUserData();
-  }
 
   Future<DocumentSnapshot> _getUserData() async {
     String? uid = FirebaseAuth.instance.currentUser?.uid;
@@ -102,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: themeProvider.drawerColor,
       ),
       body: FutureBuilder<DocumentSnapshot>(
-        future: _userDataFuture,
+        future: _getUserData(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -127,10 +109,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'https://via.placeholder.com/150';
           // Acceso a expiryDate dentro del mapa pay_subscription
           String subscriptionExpiry = userData['pay_subscription']?['expiryDate'] ?? 'No disponible';
-          String profileImage =
-              userData['profileImage'] ?? 'https://via.placeholder.com/150';
-          String subscriptionExpiry =
-              userData['subscriptionExpiry'] ?? 'No disponible';
 
           String provider = _getAuthProviderName(user!);
           String providerImage = _getProviderImage(provider);
