@@ -107,9 +107,9 @@ class ProfileScreen extends StatelessWidget {
           String userName = userData['user'] ?? 'No disponible';
           String phone = userData['phone'] ?? 'No disponible';
           String profileImage =
-              userData['profileImage'] ?? 'https://via.placeholder.com/150';
-          String subscriptionExpiry =
-              userData['subscriptionExpiry'] ?? 'No disponible';
+            userData['profileImage'] ?? 'https://via.placeholder.com/150';
+                    // Acceso a expiryDate dentro del mapa pay_subscription
+          String subscriptionExpiry = userData['pay_subscription']?['expiryDate'] ?? 'No disponible';
 
           String provider = _getAuthProviderName(user!);
           String providerImage = _getProviderImage(provider);
